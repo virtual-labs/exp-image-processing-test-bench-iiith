@@ -1,1 +1,2 @@
-### Aim of the experiment
+- To learn to build solutions using a cascade of image processing modules.  
+

@@ -1,0 +1,39 @@
+{
+  "unit-type": "lu",
+  "label": "",
+  "basedir": ".",
+  "units": [
+    {
+     "unit-type":"aim"
+    },	
+    {
+      "target": "objective.html",
+      "source": "objective.md",
+      "label": "Objective",
+      "unit-type": "task",
+      "content-type": "text"
+    },
+    {
+      "target": "procedure.html",
+      "source": "procedure.md",
+      "label": "Procedure",
+      "unit-type": "task",
+      "content-type": "text"
+    },
+    {
+      "target": "simulation.html",
+      "source": "simulation/index.html",
+      "label": "Simulation",
+      "unit-type": "task",
+      "content-type": "simulation"
+    },
+    {
+      "target": "assessment.html",
+      "source": "assessment.md",
+      "label": "Assessment",
+      "unit-type": "task",
+      "content-type": "text"
+    }
+  ]
+}
+
