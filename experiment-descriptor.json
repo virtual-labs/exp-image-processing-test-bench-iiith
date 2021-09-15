@@ -4,7 +4,7 @@
   "basedir": ".",
   "units": [
     {
-     "unit":"aim"
+     "unit-type":"aim"
     },	
     {
       "target": "objective.html",
