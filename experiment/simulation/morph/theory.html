@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><!--Google Tag Manager--><script class="gtm">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-W59SWTR');</script><!--End Google Tag Manager-->
+	<meta content="text/html; charset=utf-8" http-equiv="CONTENT-TYPE"/>
+	<title></title>
+	<meta content="LibreOffice 3.3  (Unix)" name="GENERATOR"/>
+	<meta content="20111123;16302400" name="CREATED"/>
+	<meta content="20111123;22560500" name="CHANGED"/>
+	<style type="text/css">
+	<!--
+		@page { margin: 2cm }
+		P { margin-bottom: 0.21cm }
+	-->
+	</style>
+</head>
+<body dir="LTR" lang="en-IN"><!--Google Tag Manager (noscript)--><noscript class="gtm"><iframe height="0" src="https://www.googletagmanager.com/ns.html?id=GTM-W59SWTR" style="display:none;visibility:hidden" width="0"></iframe></noscript><!--End Google Tag Manager (noscript)-->
+<p><font size="2" style="font-size: 11pt"><b>Morphological Operations:
+Theory</b></font></p>
+<p><font size="2" style="font-size: 11pt"><b>Set- theory basics</b></font></p>
+<p><font size="2" style="font-size: 11pt">Let A and B be sets with
+elements a Î A, and b Î B respectively and let x be a vector.</font></p>
+<p><font size="2" style="font-size: 11pt">The <i>Complement</i> of A is
+defined as A<sup>c</sup> = {d | dÏA}</font></p>
+<p><font size="2" style="font-size: 11pt">The <i>Difference</i> between
+two sets A and B is defined as D = A-B = {d|d ÎA, d ÏB} = A ÇB<sup>c
+</sup></font>
+</p>
+<p><font size="2" style="font-size: 11pt">The <i>Translation</i> of <i>A
+</i>by <i>x </i>is defined as A<sub>x</sub> = {a + x | " a Î A}</font></p>
+<p><font size="2" style="font-size: 11pt">The <i>Reflection</i> of <i>A
+</i>is defined as -B = {-b | " b Î B}</font></p>
+<p><font size="2" style="font-size: 11pt">In the following, a
+structural element is denoted by set B.</font></p>
+<p><font size="2" style="font-size: 11pt"><b>Dilation </b></font>
+</p>
+<p><font size="2" style="font-size: 11pt">The Dilation of <i>X </i>by <i>B</i>
+is defined as X 
+<img align="BOTTOM" border="0" height="12" name="graphics1" src="theory_html_m18552071.png" width="14"/>
+B = {x | -B<sub>x </sub>Ç X ¹ f}</font></p>
+<p><font size="2" style="font-size: 11pt">The result of dilation is a<font color="#3333cc">
+</font><font color="#000000">s</font>et of all locations x such that
+-B<sub>x</sub> has at least 1 pixel within X.</font></p>
+<p><img align="BOTTOM" border="0" height="242" name="Object 7" src="theory_html_37e381f2.png" width="398"/></p>
+<p><font size="2" style="font-size: 11pt">The dilation operation
+enlarges /expands the objects in the image. It connects objects
+separated by a distance less the width (window size) of the
+structuring element. Figure 1 shows the output obtained using 3X3
+square structuring element (whose local origin is at the centre of
+the mask). It can be seen that the there is an expansion in the
+object size and the gap between two different connected component
+gets filled. </font>
+</p>
+<p><font size="2" style="font-size: 11pt">Erosion: </font>
+</p>
+<p><font size="2" style="font-size: 11pt">The Erosion of X by B is
+defined as X 
+<img align="BOTTOM" border="0" height="12" name="Object 2" src="theory_html_m18552070.png" width="14"/>
+B = {x | B<sub>x</sub> Í X} </font>
+</p>
+<p><font size="2" style="font-size: 11pt">The erosion is a set of all
+locations x such that the structuring element B is within (contained
+in) X. </font>
+</p>
+<p><img align="BOTTOM" border="0" height="253" name="Object 12" src="theory_html_m23129e3e.png" width="402"/></p>
+<p><font size="2" style="font-size: 11pt">In contrast to the dilation
+operation, erosion decreases the size of the object. Therefore the
+size of the foreground pixels represented using white pixels shrink
+in size and hole within those regions become larger. Figure 2
+illustrates results of erosion applied on the example image with the
+same structuring element.</font></p>
+<p><font size="2" style="font-size: 11pt"><b>Opening:</b></font></p>
+<p><font size="2" style="font-size: 11pt">By combining erosion with
+dilation as below</font></p>
+<p><img align="BOTTOM" border="0" height="24" name="Object 3" src="theory_html_m2b496d36.png" width="115"/></p>
+<p><font size="2" style="font-size: 11pt">we define a new operation
+called opening. The opening operation smoothes objects. An alternate
+definition for opening is</font></p>
+<p><img align="BOTTOM" border="0" height="26" name="Object 4" src="theory_html_m777debab.png" width="154"/></p>
+<p><br/><br/>
+</p>
+<p><img align="BOTTOM" border="0" height="214" name="Object 13" src="theory_html_m7e9b3438.png" width="376"/></p>
+<p><font size="2" style="font-size: 11pt">The opening operation
+generally smoothes the boundary of the object, breaks narrow bands
+connecting two large foreground regions and eliminates thin bulges
+appear on the object boundary. Figure 3 illustrates few such cases. </font>
+</p>
+<p><font size="2" style="font-size: 11pt"><b>Closing: </b></font>
+</p>
+<p><font size="2" style="font-size: 11pt">By reversing the ordering of
+erosion and dilation operations, a closing operation is defined:</font></p>
+<p><img align="BOTTOM" border="0" height="24" name="Object 6" src="theory_html_m781f428.png" width="129"/></p>
+<p><font size="2" style="font-size: 11pt">Closing smoothes objects by
+adding pixels. All smoothing (both for closing and opening) is in
+relation to the size of the structuring element <i>B</i>. </font>
+</p>
+<p><br/><br/>
+</p>
+<p><img align="BOTTOM" border="0" height="210" name="Object 14" src="theory_html_m594e600f.png" width="367"/></p>
+<p><font size="2" style="font-size: 11pt">The closing operation tends
+to smooth the section of boundaries but as opposed to opening, it
+generally fuses narrow breaks and long thin gulfs, eliminates small
+holes smaller the size of B, and fills gaps in the boundary. Figure 4
+highlights results of closing on an example image illustrating effect
+of closing operation. </font>
+</p>
+<p><font size="2" style="font-size: 11pt"><i><b>Choice of structuring
+element</b></i></font> 
+</p>
+<p><font size="2" style="font-size: 11pt">A key difference between
+linear filtering, which is also a neighbourhood operation, and
+morphological processing is that the mask operation is defined in the
+latter using set theory. The other is the choice of shape. While a
+square shape dominates linear filtering, the <u>shape</u> of the
+structuring element is variable and is usually empirically determined
+based on the application or type of images. Generally, the desirable
+shape of a structuring element depends on the geometric shape of
+interest in the image. For instance, a typical medical image contains
+very few straight lines or objects therefore circular structural
+element is preferred over oriented structuring element. In contrast,
+aerial images usually contain oriented objects such as building,
+roads, etc. therefore oriented or rectangle structuring elements are
+preferred to better deal with such shapes. The <u>size</u> of the
+structuring element is determined based on the size of the feature of
+interest in the image. To preserve larger objects (features) a large
+structure element is preferred while a small one is used to preserve
+the finer structural details in the image. </font>
+</p>
+<p><font size="2" style="font-size: 11pt"><i><b>Extension to gray-scale
+images: </b></i></font>
+</p>
+<p><font size="2" style="font-size: 11pt">Morphological operations are
+extendable for gray scale images. In a binary image, the
+morphological operation is based on set theory. Hence, one can view
+the ‘fit’ between B and object X as set intersection. </font>
+</p>
+<p><font size="2" style="font-size: 11pt">In grey scale images with
+pixel values are drawn from 0, 1….L-1 levels. Hence, morphological
+processing of grey scale images is based on extrema operations. Thus,
+the output pixel value at any point in a gray-scale image is
+determined by taking a maximum for dilation or minimum for erosion of
+the neighborhood pixel values.</font></p>
+
+</body></html>
