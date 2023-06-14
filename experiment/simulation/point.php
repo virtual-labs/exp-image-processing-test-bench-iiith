@@ -65,7 +65,7 @@ if(isset($_GET["opt"])) {
 <!-- This file was originally generated at http://psd2cssonline.com on September 16, 2010, 10:04 am -->
 <!-- psd2css Online version 1.85 -->
 
-<title>Virtual Lab in Image Processing</title>
+<!-- <title>Virtual Lab in Image Processing</title> -->
 
 <!-- Some META tags to help with Search Engine Optimization.  Please 
 note however that META tags are NOT a magic bullet to get your web page
@@ -476,20 +476,20 @@ $("button3","#zoom").button();
 
     <!-- This is 'TopBar_jpg' -->
     <div id="Layer-3" class="TopBar_jpg"  >
-      <img src="images/Layer-3.jpg" width="894" height="96" alt="TopBar" />
+      <!-- <img src="images/Layer-3.jpg" width="894" height="96" alt="TopBar" /> -->
       <!-- This is 'IIIT' -->
-      <div id="Layer-6" class="IIIT"  >
+      <!-- <div id="Layer-6" class="IIIT"  >
         <img src="images/iiit.png" width="100" height="70" alt="IIIT" class="pngimg" />
-	</div>
+	</div> -->
 	
 			<div id="topMenu">
-			<h1 style="text-align: center;">Virtual Lab for IMAGE PROCESSING</h1>
+			<!-- <h1 style="text-align: center;">Virtual Lab for IMAGE PROCESSING</h1> -->
 			<div class="menu">
-<div class="home">
+<!-- <div class="home">
 <a onclick="confirmTo('index.html')">home</a>
-</div>
-<ul>
-<li><a href="objective.php?exp=point" target="_self" >Objective</a>
+</div> -->
+<!-- <ul> -->
+<!-- <li><a href="objective.php?exp=point" target="_self" >Objective</a>
 </li>
 <li><a href="intro.php?exp=point" target="_self" >Introduction</a>
 </li>
@@ -505,12 +505,12 @@ $("button3","#zoom").button();
 					<li><a href="assign.php?exp=point">Assignment</a></li>
 			   </ul>
 
-</li>
+</li> -->
 <!--<li><a href="references.php?exp=point" target="_self" >References</a>
 </li>-->
-<li><a href="summary.php" target="_blank" >Summary</a>
-</li>
-</ul>
+<!-- <li><a href="summary.php" target="_blank" >Summary</a>
+</li> -->
+<!-- </ul> -->
 </div>
 			</div>
 			

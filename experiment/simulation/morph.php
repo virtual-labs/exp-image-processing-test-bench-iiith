@@ -32,7 +32,7 @@ if(isset($_GET["assess"])) {
 <!-- This file was originally generated at http://psd2cssonline.com on September 16, 2010, 10:04 am -->
 <!-- psd2css Online version 1.85 -->
 
-<title>Virtual Lab in Image Processing</title>
+<!-- <title>Virtual Lab in Image Processing</title> -->
 
 
 <!-- Some META tags to help with Search Engine Optimization.  Please 
@@ -452,16 +452,16 @@ function confirmTo(url) {
 	</div>
 	
 			<div id="topMenu">
-			<h1 style="text-align: center;">Virtual Lab for IMAGE PROCESSING</h1>
-<div class="home">
+			<!-- <h1 style="text-align: center;">Virtual Lab for IMAGE PROCESSING</h1> -->
+<!-- <div class="home">
 <a onclick="confirmTo('index.html')">home</a>
-</div>
+</div> -->
 
 			<div class="menu">
 
 
-<ul>
-<li><a href="objective.php?exp=morph" target="_self" >Objective</a>
+<!-- <ul> -->
+<!-- <li><a href="objective.php?exp=morph" target="_self" >Objective</a>
 </li>
 <li><a href="intro.php?exp=morph" target="_self" >Introduction</a>
 </li>
@@ -483,15 +483,15 @@ function confirmTo(url) {
 					<li><a href="assign.php?exp=morph">Assignment</a></li>
 			   </ul>
 
-</li>
+</li> -->
 <!--
 <li><a href="references.php?exp=morph" target="_self" >References</a>
 </li>
 -->
 
-<li><a href="summary.php" target="_blank" >Summary</a>
-</li>
-</ul>
+<!-- <li><a href="summary.php" target="_blank" >Summary</a>
+</li> -->
+<!-- </ul> -->
 </div>
 			</div>
 			
