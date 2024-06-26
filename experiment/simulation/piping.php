@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+$_GET["exp"]="piping";
 if($_GET["exp"]!="piping") {
 $_SESSION["id"]=time();
 $_SESSION["state"]=0;
