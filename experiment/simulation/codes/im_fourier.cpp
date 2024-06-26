@@ -1,441 +1,223 @@
-#include<iostream>
-#include<algorithm>
-//#include "stdafx.h"
-#include <opencv/cxcore.h>
-#include<opencv/cv.h>
-#include<opencv/highgui.h>
+#include <iostream>
+#include <opencv2/opencv.hpp>
 
 #define PI 3.1428571
 #define MAXI 999999999
 
-// Rearrange the quadrants of Fourier image so that the origin is at
-// the image center
-// src & dst arrays of equal size & type
-void cvShiftDFT(CvArr * src_arr, CvArr * dst_arr )
+void cvShiftDFT(cv::Mat &src, cv::Mat &dst)
 {
-	CvMat * tmp;
-	CvMat q1stub, q2stub;
-	CvMat q3stub, q4stub;
-	CvMat d1stub, d2stub;
-	CvMat d3stub, d4stub;
-	CvMat * q1, * q2, * q3, * q4;
-	CvMat * d1, * d2, * d3, * d4;
+    cv::Mat tmp, q1, q2, q3, q4, d1, d2, d3, d4;
 
-	CvSize size = cvGetSize(src_arr);
-	CvSize dst_size = cvGetSize(dst_arr);
-	int cx, cy;
+    int cx = src.cols / 2;
+    int cy = src.rows / 2;
 
-	if(src_arr==dst_arr){
-		tmp = cvCreateMat(size.height/2, size.width/2,
-				cvGetElemType(src_arr));
-	}
+    q1 = src(cv::Rect(0, 0, cx, cy));
+    q2 = src(cv::Rect(cx, 0, cx, cy));
+    q3 = src(cv::Rect(cx, cy, cx, cy));
+    q4 = src(cv::Rect(0, cy, cx, cy));
 
-	cx = size.width/2;
-	cy = size.height/2; // image center
+    q1.copyTo(d3);
+    q2.copyTo(d4);
+    q3.copyTo(d1);
+    q4.copyTo(d2);
 
-	q1 = cvGetSubRect( src_arr, &q1stub, cvRect(0,0,cx, cy) );
-	q2 = cvGetSubRect( src_arr, &q2stub, cvRect(cx,0,cx,cy) );
-	q3 = cvGetSubRect( src_arr, &q3stub, cvRect(cx,cy,cx,cy) );
-	q4 = cvGetSubRect( src_arr, &q4stub, cvRect(0,cy,cx,cy) );
-	d1 = cvGetSubRect( src_arr, &d1stub, cvRect(0,0,cx,cy) );
-	d2 = cvGetSubRect( src_arr, &d2stub, cvRect(cx,0,cx,cy) );
-	d3 = cvGetSubRect( src_arr, &d3stub, cvRect(cx,cy,cx,cy) );
-	d4 = cvGetSubRect( src_arr, &d4stub, cvRect(0,cy,cx,cy) );
-
-	if(src_arr!=dst_arr){
-		cvCopy(q3, d1, 0);
-		cvCopy(q4, d2, 0);
-		cvCopy(q1, d3, 0);
-		cvCopy(q2, d4, 0);
-	}
-	else{
-		cvCopy(q3, tmp, 0);
-		cvCopy(q1, q3, 0);
-		cvCopy(tmp, q1, 0);
-		cvCopy(q4, tmp, 0);
-		cvCopy(q2, q4, 0);
-		cvCopy(tmp, q2, 0);
-	}
+    d1.copyTo(dst(cv::Rect(0, 0, cx, cy)));
+    d2.copyTo(dst(cv::Rect(cx, 0, cx, cy)));
+    d3.copyTo(dst(cv::Rect(cx, cy, cx, cy)));
+    d4.copyTo(dst(cv::Rect(0, cy, cx, cy)));
 }
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
-	if(atoi(argv[1])==1)
-	{
-		IplImage * im;
-		IplImage * im1;
-		IplImage * realInput;
-		IplImage * imaginaryInput;
-		IplImage * complexInput;
+    if (argc < 2)
+    {
+        std::cerr << "Usage: " << argv[0] << " <mode> <other args>" << std::endl;
+        return -1;
+    }
 
-		int dft_M, dft_N;
-		CvMat* dft_A, tmp;
-		IplImage * image_Re;
-		IplImage * image_Im;
-		IplImage * image_Re2;
-		IplImage * image_Im2;
-		double m, M;
+    int mode = atoi(argv[1]);
 
-		im1 = cvLoadImage( argv[2],0 );
-		im = cvLoadImage( argv[2], CV_LOAD_IMAGE_GRAYSCALE );
-		if( !im )
-			return -1;
+    if (mode == 1) {
+        if (argc < 5) {
+            std::cerr << "Usage: " << argv[0] << " 1 <input image> <output mag> <output phase>" << std::endl;
+            return -1;
+        }
 
-		realInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 1);
-		imaginaryInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 1);
-		complexInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 2);
+        cv::Mat im = cv::imread(argv[2], cv::IMREAD_GRAYSCALE);
+        if (im.empty()) {
+            std::cerr << "Error loading image " << argv[2] << std::endl;
+            return -1;
+        }
 
-		cvScale(im, realInput, 1.0, 0.0);
-		cvZero(imaginaryInput);
-		cvMerge(realInput, imaginaryInput, NULL, NULL, complexInput);
+        cv::Mat realInput, imaginaryInput, complexInput;
+        im.convertTo(realInput, CV_64F);
+        imaginaryInput = cv::Mat::zeros(im.size(), CV_64F);
+        cv::Mat planes[] = { realInput, imaginaryInput };
+        cv::merge(planes, 2, complexInput);
 
-		dft_M = cvGetOptimalDFTSize( im->height - 1 );
-		dft_N = cvGetOptimalDFTSize( im->width - 1 );
+        int dft_M = cv::getOptimalDFTSize(im.rows);
+        int dft_N = cv::getOptimalDFTSize(im.cols);
 
-		dft_A = cvCreateMat( dft_M, dft_N, CV_64FC2 );
-		image_Re = cvCreateImage( cvSize(dft_N, dft_M), IPL_DEPTH_64F, 1);
-		image_Im = cvCreateImage( cvSize(dft_N, dft_M), IPL_DEPTH_64F, 1);
-		image_Re2 = cvCreateImage( cvSize(dft_N, dft_M), IPL_DEPTH_64F, 1);
-		image_Im2 = cvCreateImage( cvSize(dft_N, dft_M), IPL_DEPTH_64F, 1);
+        cv::Mat dft_A;
+        cv::copyMakeBorder(complexInput, dft_A, 0, dft_M - im.rows, 0, dft_N - im.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
 
-		// copy A to dft_A and pad dft_A with zeros
-		cvGetSubRect( dft_A, &tmp, cvRect(0,0, im->width, im->height));
-		cvCopy( complexInput, &tmp, NULL );
-		if( dft_A->cols > im->width )
-		{
-			cvGetSubRect( dft_A, &tmp, cvRect(im->width,0, dft_A->cols -
-						im->width, im->height));
-			cvZero( &tmp );
-		}
+        cv::dft(dft_A, dft_A);
 
+        cv::split(dft_A, planes);
+        cv::Mat image_Re = planes[0].clone();
+        cv::Mat image_Im = planes[1].clone();
+        cv::Mat image_Re2 = planes[0].clone();
+        cv::Mat image_Im2 = planes[1].clone();
 
-		cvDFT( dft_A, dft_A, CV_DXT_FORWARD, complexInput->height );
+        cv::magnitude(image_Re, image_Im, image_Re);
 
-		// Split Fourier in real and imaginary parts
-		cvSplit( dft_A, image_Re, image_Im, 0, 0 );
-		cvCopyImage(image_Re,image_Re2);
-		cvCopyImage(image_Im,image_Im2);
+        int r = image_Re.rows;
+        int c = image_Re.cols;
+        for (int i = 0; i < r; ++i) {
+            for (int j = 0; j < c; ++j) {
+                image_Re2.at<double>(i, j) = atan2(image_Im2.at<double>(i, j), image_Re2.at<double>(i, j));
+            }
+        }
 
-		// Compute the magnitude of the spectrum Mag = sqrt(Re^2 + Im^2)
-		cvPow( image_Re, image_Re, 2.0);
-		cvPow( image_Im, image_Im, 2.0);
-		cvAdd( image_Re, image_Im, image_Re, NULL);
-		cvPow( image_Re, image_Re, 0.5 );
+        image_Re += cv::Scalar::all(1);
+        cv::log(image_Re, image_Re);
 
-		// compute the phase of the spectrum Phase = atan(Re/Im)
-		int r=cvGetSize(image_Re).height;
-		int c=cvGetSize(image_Re).width;
-		CvScalar s1,s2;
-		for (int i=0;i<r;i++)
-		{
-			for (int j=0;j<c;j++)
-			{
-				s1=cvGet2D(image_Re2,i,j);
-				s2=cvGet2D(image_Im2,i,j);
-				s1.val[0]=atan((s2.val[0]/s1.val[0]));
-				cvSet2D(image_Re2,i,j,s1);
-			}
-		}
+        cvShiftDFT(image_Re, image_Re);
 
-		// Compute log(1 + Mag)
-		cvAddS( image_Re, cvScalarAll(1.0), image_Re, NULL ); // 1 + Mag
-		cvLog( image_Re, image_Re ); // log(1 + Mag)
+        double m, M;
+        cv::minMaxLoc(image_Re, &m, &M);
+        image_Re.convertTo(image_Re, CV_8U, 255.0 / (M - m), -m * 255.0 / (M - m));
+        cv::imwrite(argv[3], image_Re);
 
-		// Rearrange the quadrants of Fourier image so that the origin is at
-		// the image center
-		cvShiftDFT( image_Re, image_Re );
+        cv::minMaxLoc(image_Re2, &m, &M);
+        image_Re2.convertTo(image_Re2, CV_8U, 255.0 / (M - m), -m * 255.0 / (M - m));
+        cv::imwrite(argv[4], image_Re2);
+    }
+    else if (mode == 2) {
+        if (argc < 5) {
+            std::cerr << "Usage: " << argv[0] << " 2 <input mag> <input phase> <output image>" << std::endl;
+            return -1;
+        }
 
-		cvMinMaxLoc(image_Re, &m, &M, NULL, NULL, NULL);
-		cvScale(image_Re, image_Re, 1.0/(M-m), 1.0*(-m)/(M-m));
+        cv::Mat magImage = cv::imread(argv[2], cv::IMREAD_GRAYSCALE);
+        cv::Mat phaseImage = cv::imread(argv[3], cv::IMREAD_GRAYSCALE);
+        if (magImage.empty() || phaseImage.empty()) {
+            std::cerr << "Error loading images" << std::endl;
+            return -1;
+        }
 
-		IplImage *image_Re1 = cvCreateImage( cvGetSize(image_Re), IPL_DEPTH_8U, 1);
-		CvPoint minLoc, maxLoc;
-		double minVal = 0, maxVal = 0;
-		cvMinMaxLoc(image_Re, &minVal, &maxVal, &minLoc, &maxLoc, 0);
-		cvCvtScaleAbs(image_Re,image_Re1,255.0*(maxVal-minVal),0);
-		cvSaveImage(argv[3],image_Re1);
-		//cvNamedWindow("magnitude",0);
-		//cvShowImage("magnitude",image_Re1);
+        magImage.convertTo(magImage, CV_64F);
+        phaseImage.convertTo(phaseImage, CV_64F);
 
-		cvMinMaxLoc(image_Re2, &m, &M, NULL, NULL, NULL);
-		cvScale(image_Re2, image_Re2, 1.0/(M-m), 1.0*(-m)/(M-m));
+        // Reverse log transformation
+        cv::exp(magImage, magImage);
+        magImage -= cv::Scalar::all(1); // Subtract 1 to reverse log domain shift
 
-		minVal = 0, maxVal = 0;
-		cvMinMaxLoc(image_Re2, &minVal, &maxVal, &minLoc, &maxLoc, 0);
-		cvCvtScaleAbs(image_Re2,image_Re1,255.0*(maxVal-minVal),0);
-		cvSaveImage(argv[4],image_Re1);
-		//cvNamedWindow("phase",0);
-		//cvShowImage("phase",image_Re1);
+        // Create complex image from magnitude and phase
+        cv::Mat realInput, imaginaryInput;
+        cv::polarToCart(magImage, phaseImage, realInput, imaginaryInput);
 
-		//FOR INVERSE*******
-		cvDFT( dft_A, dft_A, CV_DXT_INVERSE_SCALE, dft_N);//complexInput->height );
-		cvScale(dft_A,dft_A,0.001);
+        cv::Mat complexInput;
+        cv::Mat planes[] = { realInput, imaginaryInput };
+        cv::merge(planes, 2, complexInput);
 
-		// Split Fourier in real and imaginary parts
-		cvSplit( dft_A, image_Re, image_Im, 0, 0 );
+        // Perform inverse DFT
+        cv::dft(complexInput, complexInput, cv::DFT_INVERSE | cv::DFT_SCALE);
 
-		// Compute the magnitude of the spectrum Mag = sqrt(Re^2 + Im^2)
-		cvPow( image_Re, image_Re, 2.0);
-		cvPow( image_Im, image_Im, 2.0);
-		cvAdd( image_Re, image_Im, image_Re, NULL);
-		cvPow( image_Re, image_Re, 0.5 );
+        // Split into planes and take magnitude
+        cv::split(complexInput, planes);
+        cv::magnitude(planes[0], planes[1], planes[0]);
 
-		// Compute log(1 + Mag)
-		cvAddS( image_Re, cvScalarAll(1.0), image_Re, NULL ); // 1 + Mag
-		cvLog( image_Re, image_Re ); // log(1 + Mag)
+        // Normalize the output image
+        double m, M;
+        cv::minMaxLoc(planes[0], &m, &M);
+        planes[0].convertTo(planes[0], CV_8U, 255.0 / (M - m), -m * 255.0 / (M - m));
+        cv::imwrite(argv[4], planes[0]);
+    }
+    else if (mode == 3)
+    {
+        if (argc < 8)
+        {
+            std::cerr << "Usage: " << argv[0] << " 3 <input image> <output image> <theta> <rad> <deltheta> <delrad>" << std::endl;
+            return -1;
+        }
 
-		cvMinMaxLoc(image_Re, &m, &M, NULL, NULL, NULL);
-		cvScale(image_Re, image_Re, 1.0/(M-m), 1.0*(-m)/(M-m));
-		minVal = 0; maxVal = 0;
-		cvMinMaxLoc(image_Re, &minVal, &maxVal, &minLoc, &maxLoc, 0);
-		cvCvtScaleAbs(image_Re,image_Re1,255.0*(maxVal-minVal),0);
-		//cvNamedWindow("inverse",0);
-		//cvShowImage("inverse",image_Re1);
-		//cvWaitKey(-1);
+        cv::Mat im = cv::imread(argv[2], cv::IMREAD_GRAYSCALE);
+        if (im.empty())
+        {
+            std::cerr << "Error loading image " << argv[2] << std::endl;
+            return -1;
+        }
 
-		cvReleaseImage(&image_Re);
-		cvReleaseImage(&image_Re1);
-		cvReleaseImage(&image_Im);
-		cvReleaseImage(&im);
-		cvReleaseImage(&im1);
-		cvReleaseImage(&realInput);
-		cvReleaseImage(&imaginaryInput);
-		cvReleaseImage(&complexInput);
-		cvReleaseMat(&dft_A);
-	}
-	else if(atoi(argv[1])==2)
-	{
-		IplImage * magImage = cvLoadImage(argv[2],0);
-		IplImage * phaseImage = cvLoadImage(argv[3],0);
-		IplImage * realInput = cvCreateImage( cvGetSize(magImage), IPL_DEPTH_64F, 1);
-		IplImage * imaginaryInput = cvCreateImage( cvGetSize(magImage), IPL_DEPTH_64F, 1);
-		IplImage * complexInput = cvCreateImage( cvGetSize(magImage), IPL_DEPTH_64F, 2);
-		IplImage * realInput2 = cvCreateImage( cvGetSize(phaseImage), IPL_DEPTH_64F, 1);
-		IplImage * imaginaryInput2 = cvCreateImage( cvGetSize(phaseImage), IPL_DEPTH_64F, 1);
-		IplImage * complexInput2 = cvCreateImage( cvGetSize(phaseImage), IPL_DEPTH_64F, 2);
+        cv::Mat realInput, imaginaryInput, complexInput;
+        im.convertTo(realInput, CV_64F);
+        imaginaryInput = cv::Mat::zeros(im.size(), CV_64F);
+        cv::Mat planes[] = {realInput, imaginaryInput};
+        cv::merge(planes, 2, complexInput);
 
-		cvScale(magImage, realInput, 1.0, 0.0);
-		cvZero(imaginaryInput);
-		cvMerge(realInput, imaginaryInput, NULL, NULL, complexInput);
-		int dft_M = cvGetOptimalDFTSize( (magImage->height > phaseImage->height?magImage->height:phaseImage->height) - 1 );
-		int dft_N = cvGetOptimalDFTSize( (magImage->width > phaseImage->width?magImage->width:phaseImage->width) - 1 );
-		CvMat* dft_A, tmp;
-		dft_A = cvCreateMat( dft_M, dft_N, CV_64FC2 );
-		cvGetSubRect( dft_A, &tmp, cvRect(0,0, magImage->width, magImage->height));
-		cvCopy( complexInput, &tmp, NULL );
-		if( dft_A->cols > magImage->width )
-		{
-			cvGetSubRect( dft_A, &tmp, cvRect(magImage->width,0, dft_A->cols -
-						magImage->width, magImage->height));
-			cvZero( &tmp );
-		}
-		cvDFT( dft_A, dft_A, CV_DXT_FORWARD, complexInput->height );
-		IplImage * re = cvCreateImage( cvSize(dft_N,dft_M), IPL_DEPTH_64F, 1);
-		IplImage * im = cvCreateImage( cvSize(dft_N,dft_M), IPL_DEPTH_64F, 1);
-		IplImage * mag = cvCreateImage( cvSize(dft_N,dft_M), IPL_DEPTH_64F, 1);
-		cvSplit( dft_A, re, im, 0, 0 );
-		cvPow( re, re, 2.0);
-		cvPow( im, im, 2.0);
-		cvAdd( re, im, mag, NULL);
-		cvPow( mag, mag, 0.5 );
+        int theta = atoi(argv[4]);
+        int rad = atoi(argv[5]);
+        int deltheta = atoi(argv[6]);
+        int delrad = atoi(argv[7]);
 
-		cvScale(phaseImage, realInput2, 1.0, 0.0);
-		cvZero(imaginaryInput2);
-		cvMerge(realInput2, imaginaryInput2, NULL, NULL, complexInput2);
-		//int dft_M2 = cvGetOptimalDFTSize( phaseImage->height - 1 );
-		//int dft_N2 = cvGetOptimalDFTSize( phaseImage->width - 1 );
-		CvMat* dft_A2, tmp2;
-		dft_A2 = cvCreateMat( dft_M, dft_N, CV_64FC2 );
-		cvGetSubRect( dft_A2, &tmp2, cvRect(0,0, phaseImage->width, phaseImage->height));
-		cvCopy( complexInput2, &tmp2, NULL );
-		if( dft_A2->cols > phaseImage->width )
-		{
-			cvGetSubRect( dft_A2, &tmp2, cvRect(phaseImage->width,0, dft_A2->cols -
-						phaseImage->width, phaseImage->height));
-			cvZero( &tmp2 );
-		}
-		cvDFT( dft_A2, dft_A2, CV_DXT_FORWARD, complexInput2->height );
-		cvSplit( dft_A2, re, im, 0, 0 );
+        double angle1 = theta - (deltheta / 2);
+        double angle2 = theta + (deltheta / 2);
+        double angle3 = 180 + theta - (deltheta / 2);
+        double angle4 = 180 + theta + (deltheta / 2);
 
+        double val1 = atan(tan(PI / 180 * angle1));
+        double val2 = atan(tan(PI / 180 * angle2));
+        double val3 = atan(tan(PI / 180 * angle3));
+        double val4 = atan(tan(PI / 180 * angle4));
 
-		IplImage *realOutput = cvCreateImage(cvSize(dft_N,dft_M),IPL_DEPTH_64F,1);
-		IplImage *imagOutput = cvCreateImage(cvSize(dft_N,dft_M),IPL_DEPTH_64F,1);
-		IplImage *complexOutput = cvCreateImage(cvSize(dft_N,dft_M),IPL_DEPTH_64F,2);
-		int r=cvGetSize(mag).height;
-		int c=cvGetSize(mag).width;
-		CvScalar s1,s2,s3,s4;
-		for (int i=0;i<r;i++)
-		{
-			for (int j=0;j<c;j++)
-			{
-				s1=cvGet2D(mag,i,j);
-				s2=cvGet2D(re,i,j);
-				s3=cvGet2D(im,i,j);
-				s4.val[0]=(s1.val[0]*s2.val[0])/(sqrt((s2.val[0]*s2.val[0]) + (s3.val[0]*s3.val[0])));
-				cvSet2D(realOutput,i,j,s4);
-				s4.val[0]=(s1.val[0]*s3.val[0])/(sqrt((s2.val[0]*s2.val[0]) + (s3.val[0]*s3.val[0])));
-				cvSet2D(imagOutput,i,j,s4);
-			}
-		}
-		cvMerge(realOutput, imagOutput, NULL, NULL, dft_A);
-		cvDFT( dft_A, dft_A, CV_DXT_INVERSE_SCALE, dft_N);//complexInput->height );
-		cvScale(dft_A,dft_A,0.001);
-		cvSplit( dft_A, realOutput, imagOutput, 0, 0 );
-		cvPow( realOutput, realOutput, 2.0);
-		cvPow( imagOutput, imagOutput, 2.0);
-		cvAdd( realOutput, imagOutput, realOutput, NULL);
-		cvPow( realOutput, realOutput, 0.5 );
-		cvAddS( realOutput, cvScalarAll(1.0), realOutput, NULL ); // 1 + Mag
-		cvLog( realOutput, realOutput ); // log(1 + Mag)
-		double m,M;
-		cvMinMaxLoc(realOutput, &m, &M, NULL, NULL, NULL);
-		cvScale(realOutput, realOutput, 1.0/(M-m), 1.0*(-m)/(M-m));
-		IplImage * Output = cvCreateImage(cvGetSize(realOutput),IPL_DEPTH_8U,1);
-		CvPoint minLoc, maxLoc;
-		double minVal = 0; double maxVal = 0;
-		cvMinMaxLoc(realOutput, &minVal, &maxVal, &minLoc, &maxLoc, 0);
-		cvCvtScaleAbs(realOutput,Output,255.0*(maxVal-minVal),0);
-		cvSaveImage(argv[4],Output);
-		//cvNamedWindow("impofphase",0);
-		//cvShowImage("impofphase",Output);
-		//cvWaitKey(-1);
+        int dft_M = cv::getOptimalDFTSize(im.rows);
+        int dft_N = cv::getOptimalDFTSize(im.cols);
 
+        cv::Mat dft_A;
+        cv::copyMakeBorder(complexInput, dft_A, 0, dft_M - im.rows, 0, dft_N - im.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
+        cv::dft(dft_A, dft_A);
 
-		cvReleaseImage(&re);
-		cvReleaseImage(&im);
-		cvReleaseImage(&mag);
-		cvReleaseImage(&magImage);
-		cvReleaseImage(&phaseImage);
-		cvReleaseImage(&realInput);
-		cvReleaseImage(&imaginaryInput);
-		cvReleaseImage(&complexInput);
-		cvReleaseImage(&realOutput);
-		cvReleaseImage(&imagOutput);
-		cvReleaseImage(&complexOutput);
-		cvReleaseImage(&Output);
-		cvReleaseMat(&dft_A);
-	}
-	else if(atoi(argv[1])==3)
-	{
-		IplImage * im = cvLoadImage(argv[2],0);
-		IplImage * realInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 1);
-		IplImage * imaginaryInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 1);
-		IplImage * complexInput = cvCreateImage( cvGetSize(im), IPL_DEPTH_64F, 2);
-		CvMat* dft_A, tmp;
-		int theta = atoi(argv[4]);
-		int rad = atoi(argv[5]);
-		int deltheta = atoi(argv[6]);
-		int delrad = atoi(argv[7]);
-		double angle1 = theta-(deltheta/2);
-		double angle2 = theta+(deltheta/2);
-		double angle3 = 180+theta-(deltheta/2);
-		double angle4 = 180+theta+(deltheta/2);
-		double val1 = atan((angle1==90||angle1==270||angle1==-90||angle1==-270)?MAXI:tan(PI/180*angle1));
-		double val2 = atan((angle1==90||angle1==270||angle1==-90||angle1==-270)?MAXI:tan(PI/180*angle2));
-		double val3 = atan((angle1==90||angle1==270||angle1==-90||angle1==-270)?MAXI:tan(PI/180*angle3));
-		double val4 = atan((angle1==90||angle1==270||angle1==-90||angle1==-270)?MAXI:tan(PI/180*angle4));
+        cv::split(dft_A, planes);
+        cv::Mat &re = planes[0];
+        cv::Mat &imag = planes[1];
 
-		int dft_M, dft_N;
-		cvScale(im, realInput, 1.0, 0.0);
-		cvZero(imaginaryInput);
-		cvMerge(realInput, imaginaryInput, NULL, NULL, complexInput);
-		dft_M = cvGetOptimalDFTSize( im->height - 1 );
-		dft_N = cvGetOptimalDFTSize( im->width - 1 );
-		dft_A = cvCreateMat( dft_M, dft_N, CV_64FC2 );
-		cvGetSubRect( dft_A, &tmp, cvRect(0,0, im->width, im->height));
-		cvCopy( complexInput, &tmp, NULL );
-		if( dft_A->cols > im->width )
-		{
-			cvGetSubRect( dft_A, &tmp, cvRect(im->width,0, dft_A->cols -
-						im->width, im->height));
-			cvZero( &tmp );
-		}
-		cvDFT( dft_A, dft_A, CV_DXT_FORWARD, complexInput->height );
-		IplImage * re = cvCreateImage(cvSize(dft_N,dft_M),IPL_DEPTH_64F,1);
-		IplImage * imag = cvCreateImage(cvSize(dft_N,dft_M),IPL_DEPTH_64F,1);
-		cvSplit(dft_A,re,imag,0,0);
+        int r = imag.rows;
+        int c = imag.cols;
+        for (int i = 0; i < r; i++)
+        {
+            for (int j = 0; j < c; j++)
+            {
+                double dist = sqrt(pow((i - r / 2), 2) + pow((j - c / 2), 2));
+                if ((dist <= rad) && ((rad - delrad) <= dist))
+                {
+                    double row = i - r / 2;
+                    double col = j - c / 2;
+                    double val = atan2(row, col);
 
-		int r = cvGetSize(imag).height;
-		int c = cvGetSize(imag).width;
-		double dist,row,col,val;
-		CvScalar s;
-		for (int i=0;i<r;i++)
-		{
-			for (int j=0;j<c;j++)
-			{
-				dist = sqrt(pow((i - r/2),2) + pow((j - c/2),2));
-				if ((dist<=rad) && ((rad-delrad)<=dist))
-				{
-					if (deltheta==180)
-					{
-						s.val[0]=0.0;
-						cvSet2D(imag,i,j,s);
-						cvSet2D(re,i,j,s);
-					}
-					else
-					{
-						row=i-r/2;
-						col=j-c/2;
-						if (col==0)
-							val=atan(MAXI);
-						else 
-							val=atan(-row/col);
-						if ((val1>=val2 && (val>=val1||val<=val2)) || (val3>=val4 && (val>=val3||val<=val4)))
-						{
-							s.val[0]=0.0;
-							cvSet2D(imag,i,j,s);
-							cvSet2D(re,i,j,s);
-						}
-						else if ((val>=val1 && val<=val2) || (val>=val3 && val<=val4))
-						{
-							s.val[0]=0.0;
-							cvSet2D(imag,i,j,s);
-							cvSet2D(re,i,j,s);
-						}
-					}
-				}
-			}
-		}
+                    if ((val1 >= val2 && (val >= val1 || val <= val2)) ||
+                        (val3 >= val4 && (val >= val3 || val <= val4)) ||
+                        (val >= val1 && val <= val2) ||
+                        (val >= val3 && val <= val4))
+                    {
+                        re.at<double>(i, j) = 0.0;
+                        imag.at<double>(i, j) = 0.0;
+                    }
+                }
+            }
+        }
 
-		//cvNamedWindow("imaginary",0);
-		//cvShowImage("imaginary",imag);
-		//cvNamedWindow("real",0);
-		//cvShowImage("real",re);
+        cv::merge(planes, 2, dft_A);
+        cv::dft(dft_A, dft_A, cv::DFT_INVERSE | cv::DFT_SCALE);
 
-		cvMerge(re,imag,NULL,NULL,dft_A);
-		cvDFT( dft_A, dft_A, CV_DXT_INVERSE_SCALE, dft_N);
-		cvScale(dft_A,dft_A,0.001);
-		cvSplit(dft_A,re,imag,0,0);
-		cvPow(re,re,2);
-		cvPow(imag,imag,2);
-		cvAdd(re,imag,re,NULL);
-		cvPow(re,re,0.5);
-		cvAddS( re, cvScalarAll(1.0), re, NULL ); // 1 + Mag
-		cvLog( re, re); // log(1 + Mag)
-		double m,M;
-		cvMinMaxLoc(re, &m, &M, NULL, NULL, NULL);
-		cvScale(re, re, 1.0/(M-m), 1.0*(-m)/(M-m));
-		IplImage * Output = cvCreateImage(cvGetSize(re),IPL_DEPTH_8U,1);
-		CvPoint minLoc, maxLoc;
-		double minVal = 0; double maxVal = 0;
-		cvMinMaxLoc(re, &minVal, &maxVal, &minLoc, &maxLoc, 0);
-		cvCvtScaleAbs(re,Output,255.0*(maxVal-minVal),0);
-		cvSaveImage(argv[3],Output);
+        cv::split(dft_A, planes);
+        cv::magnitude(planes[0], planes[1], planes[0]);
 
-		//cvNamedWindow("advfourier",0);
-		//cvShowImage("advfourier",Output);
+        // Normalize without log transform for better contrast control
+        double m, M;
+        cv::minMaxLoc(planes[0], &m, &M);
+        planes[0].convertTo(planes[0], CV_8U, 255.0 / (M - m), -m * 255.0 / (M - m));
+        cv::imwrite(argv[3], planes[0]);
+    }
 
-		//cvWaitKey(-1);
-
-		cvReleaseImage(&im);
-		cvReleaseImage(&realInput);
-		cvReleaseImage(&imaginaryInput);
-		cvReleaseImage(&complexInput);
-		cvReleaseImage(&re);
-		cvReleaseImage(&imag);
-		cvReleaseMat(&dft_A);
-		cvReleaseImage(&Output);
-	}
-
-	return 0;
+    return 0;
 }
