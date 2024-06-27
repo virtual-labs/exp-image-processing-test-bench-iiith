@@ -1,90 +1,82 @@
-#include<iostream>
-#include<algorithm>
-#include<queue>
-#include<vector>
-#include<opencv/cv.h>
-#include<opencv/highgui.h>
+#include <iostream>
+#include <opencv2/opencv.hpp>
 
 using namespace std;
+using namespace cv;
 
 // argv[2] indicates Operation
 // argv[3] indicates Shape
-// argv[3] indicates Size
+// argv[4] indicates Size
 
 int main(int argc, char* argv[])
 {
-	IplImage* source = cvLoadImage(argv[1],0);
+    if (argc != 6) {
+        cout << "Usage: " << argv[0] << " <input_image> <output_image> <operation> <shape> <size>" << endl;
+        return -1;
+    }
 
-	int col = cvGetSize(source).width;
-	int row = cvGetSize(source).height;
+    Mat source = imread(argv[1], IMREAD_GRAYSCALE);
+    if (source.empty()) {
+        cout << "Error loading image " << argv[1] << endl;
+        return -1;
+    }
 
-	IplImage* temp = cvCreateImage(cvSize(col,row),IPL_DEPTH_8U,1);
-	IplImage* dest = cvCreateImage(cvSize(col,row),IPL_DEPTH_8U,1);
+    int col = source.cols;
+    int row = source.rows;
 
-	int a=atoi(argv[3]);
-	int b=atoi(argv[4]);
-	int c=atoi(argv[5]);
+    Mat dest;
+    int operation = atoi(argv[3]);
+    int shape = atoi(argv[4]);
+    int size = atoi(argv[5]);
 
-	IplConvKernel* se;
+    Mat se;
 
-	if (b==1)
-	{
-		if (c==1)
-			se = cvCreateStructuringElementEx( 3, 3, 1, 1, CV_SHAPE_ELLIPSE, 0 );
-		else if (c==2)
-			se = cvCreateStructuringElementEx( 5, 5, 2, 2, CV_SHAPE_ELLIPSE, 0 );
-		else if (c==3)
-			se = cvCreateStructuringElementEx( 7, 7, 2, 2, CV_SHAPE_ELLIPSE, 0 );
-	}
-	else if (b==2)
-	{
-		if (c==1)
-			se = cvCreateStructuringElementEx( 3, 3, 1, 1, CV_SHAPE_RECT, 0 );
-		else if (c==2)
-			se = cvCreateStructuringElementEx( 5, 5, 2, 2, CV_SHAPE_RECT, 0 );
-		else if (c==3)
-			se = cvCreateStructuringElementEx( 7, 7, 2, 2, CV_SHAPE_RECT, 0 );
-	}
-	else if (b==3)
-	{
-		if (c==1)
-			se = cvCreateStructuringElementEx( 3, 3, 1, 1, CV_SHAPE_ELLIPSE, 0 );
-		else if (c==2)
-			se = cvCreateStructuringElementEx( 5, 5, 2, 2, CV_SHAPE_ELLIPSE, 0 );
-		else if (c==3)
-			se = cvCreateStructuringElementEx( 7, 7, 2, 2, CV_SHAPE_ELLIPSE, 0 );
-	}
+    if (shape == 1) { // Ellipse
+        if (size == 1)
+            se = getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
+        else if (size == 2)
+            se = getStructuringElement(MORPH_ELLIPSE, Size(5, 5));
+        else if (size == 3)
+            se = getStructuringElement(MORPH_ELLIPSE, Size(7, 7));
+    } else if (shape == 2) { // Rectangle
+        if (size == 1)
+            se = getStructuringElement(MORPH_RECT, Size(3, 3));
+        else if (size == 2)
+            se = getStructuringElement(MORPH_RECT, Size(5, 5));
+        else if (size == 3)
+            se = getStructuringElement(MORPH_RECT, Size(7, 7));
+    } else if (shape == 3) { // Ellipse (duplicate)
+        if (size == 1)
+            se = getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
+        else if (size == 2)
+            se = getStructuringElement(MORPH_ELLIPSE, Size(5, 5));
+        else if (size == 3)
+            se = getStructuringElement(MORPH_ELLIPSE, Size(7, 7));
+    }
 
-	if (a==1)
-	{
-		cvErode(source,dest,se,1);
-	}
-	else if (a==2)
-	{
-		cvDilate(source,dest,se,1);
-	}
-	else if (a==3)
-	{
-		cvErode(source,temp,se,1);
-		cvDilate(temp,dest,se,1);
-	}
-	else if (a==4)
-	{
-		cvDilate(source,temp,se,1);
-		cvErode(temp,dest,se,1);
-	}
+    if (operation == 1) {
+        erode(source, dest, se);
+    } else if (operation == 2) {
+        dilate(source, dest, se);
+    } else if (operation == 3) {
+        Mat temp;
+        erode(source, temp, se);
+        dilate(temp, dest, se);
+    } else if (operation == 4) {
+        Mat temp;
+        dilate(source, temp, se);
+        erode(temp, dest, se);
+    }
 
-	CvScalar s1,s2;
-	for (int i=0;i<row;i++)
-	{
-		for (int j=0;j<col;j++)
-		{
-			s1=cvGet2D(source,i,j);
-			s2=cvGet2D(dest,i,j);
-			if (s1.val[0]!=s2.val[0])
-				cout<<s1.val[0]<<" and "<<s2.val[0]<<endl;
-		}
-	}
+    for (int i = 0; i < row; i++) {
+        for (int j = 0; j < col; j++) {
+            if (source.at<uchar>(i, j) != dest.at<uchar>(i, j)) {
+                cout << (int)source.at<uchar>(i, j) << " and " << (int)dest.at<uchar>(i, j) << endl;
+            }
+        }
+    }
 
-	cvSaveImage(argv[2],dest);
+    imwrite(argv[2], dest);
+
+    return 0;
 }

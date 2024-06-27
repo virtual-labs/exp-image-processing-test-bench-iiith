@@ -16,8 +16,8 @@ if(isset($_GET["assess"])) {
 	}
 
 
-$slope=(isset($_GET["m"]))?$_GET["m"]:45;
-$const=(isset($_GET["c"]))?$_GET["c"]:0;
+$slope=$_GET["m"] ?? 45;
+$const=$_GET["c"] ?? 0;
 
 $r=106; 
 

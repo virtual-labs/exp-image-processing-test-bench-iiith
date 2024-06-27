@@ -6,12 +6,12 @@ include './'.$exp.'/quiz.php';
 
 $starttime = (!isset($_POST['starttime']) ? time() : $_POST['starttime']);
 $answers = (!isset($_POST['answers']) ? "0 0 0" : $_POST['answers']);
-$answer = (isset($_POST['quiz']) ? $_POST['quiz']: 0);
+$answer = ($_POST['quiz'] ?? 0);
 $ques_no= (!isset($_POST['qnumber']) ? 0 : $_POST['qnumber']);
  
 
 if($ques_no>0) {
- $answers_k = explode(" ",$answers);
+ $answers_k = explode(" ",(string) $answers);
  $answers_k[$ques_no-1]=$answer;
  $answers=implode(" ",$answers_k);
 }
@@ -148,8 +148,8 @@ echo '&nbsp;</th>
 } else {
 $c_answers=0;
 
-$correct_k = explode(" ",$correct);
-$answers_k = explode(" ",$answers);
+$correct_k = explode(" ",(string) $correct);
+$answers_k = explode(" ",(string) $answers);
 
 for($i=0;$i<$no_ques;$i++) {
 	if($answers_k[$i]==$correct_k[$i]) {
@@ -186,8 +186,8 @@ onclick="location=\'./quiz.php?exp='.$exp.'\'"></td>
 
 
 
-$correct_k = explode(" ",$correct);
-$answers_k = explode(" ",$answers);
+$correct_k = explode(" ",(string) $correct);
+$answers_k = explode(" ",(string) $answers);
 echo '
 
 <h2> '.$exp_name.' QUIZ RESULTS</h2>
