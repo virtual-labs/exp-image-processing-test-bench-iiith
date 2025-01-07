@@ -1,0 +1,1337 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script class="gtm">
+      ;(function (w, d, s, l, i) {
+        w[l] = w[l] || []
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' })
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : ''
+        j.async = true
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl
+        f.parentNode.insertBefore(j, f)
+      })(window, document, 'script', 'dataLayer', 'GTM-W59SWTR')
+    </script>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <!-- This file was originally generated at http://psd2cssonline.com on September 16, 2010, 10:04 am -->
+    <!-- psd2css Online version 1.85 -->
+
+    <!-- <title>Virtual Lab in Image Processing</title> -->
+
+    <!-- Some META tags to help with Search Engine Optimization.  Please
+note however that META tags are NOT a magic bullet to get your web page
+to the top of search engine rankings.  They are just part of that effort.  You
+can get more information by googling SEO or visiting the psd2css Online forums. -->
+    <meta name="description" content="Put the description of this page here" />
+    <meta
+      name="keywords"
+      content="Put keywords for this page here separated by commas"
+    />
+    <meta
+      name="generator"
+      content="psd2css Online - Dynamic Web Pages from your Photoshop Design in seconds"
+    />
+
+    <!-- The CSS Reset from Eric Meyers -->
+    <!-- <link rel="stylesheet" type="text/css" href="cssreset.css" media="screen" /> -->
+
+    <!-- The Primary External CSS style sheet. -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="css/psd2css.css"
+      media="screen"
+    />
+
+    <!-- We use the jquery javascript library for DOM manipulation and
+some javascript tricks.  We serve the script from Google because its
+faster than most ISPs.  Get more information and documentation
+at http://jquery.com
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+-->
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <!-- All the javascript generated for your design is in this file -->
+    <script type="text/javascript" src="js/psd2css.js"></script>
+
+    <!-- For Jquery UI-->
+    <script
+      type="text/javascript"
+      src="js/jquery-ui-1.8.4.custom.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="css/dark-hive/jquery-ui-1.8.4.custom.css"
+    />
+
+    <!-- For Slider - http://carpe.ambiprospect.com/slider/-->
+    <link type="text/css" rel="StyleSheet" href="css/carpe-slider.css" />
+    <script type="text/javascript" src="js/carpe-slider.js"></script>
+
+    <!--http://www.cssmenumaker.com/builder/menu_info.php?menu=057-->
+    <link type="text/css" rel="StyleSheet" href="menu/menu_style.css" />
+
+    <!--for ImgSelect - http://odyniec.net/projects/imgareaselect/-->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="css/imgareaselect-default.css"
+    />
+    <script type="text/javascript" src="js/jquery.imgareaselect.js"></script>
+
+    <!--for Flot -->
+    <script type="text/javascript" src="js/jquery.flot.js"></script>
+
+    <!--for COntent Slider - Jquery Slider/-->
+    <link rel="stylesheet" type="text/css" href="css/jquery-slider.css" />
+
+    <!-- opencv.js  -->
+    <script
+      async
+      src="https://docs.opencv.org/4.10.0/opencv.js"
+      type="text/javascript"
+    ></script>
+
+    <script type="text/javascript">
+      var inputMosaic = null
+      var croppedImage = null
+      var processedImage = null
+
+      function blinker(i) {
+        if (buttId != 'cancel' && i > 0) {
+          $($(buttId), '#Layer-2').toggleClass('ui-state-hover')
+          setTimeout('blinker(' + (i - 1) + ')', 500)
+        }
+      }
+
+      function set_state(state) {
+        switch (state) {
+          case 0:
+            $('#nextBox').html(
+              "Start the Experiment by clicking on 'Select Image' and selecting an Input Image from the Mosaic"
+            )
+            buttId = 'button1'
+            blinker(10)
+            break
+          case 1:
+            $('#nextBox').html(
+              "Select appropriate parameters and click on 'Run'."
+            )
+            buttId = 'button2'
+            blinker(10)
+            break
+          case 2:
+            $('#nextBox').html(
+              "Click on the 'View Full Size Image' Button to view a closeup of the two images or on 'Reset' to start again at the beginning."
+            )
+            buttId = 'button3'
+            blinker(8)
+            break
+        }
+        jstate = state
+      }
+
+      function toggleMosaic() {
+        var ias = $('#Mosaic').imgAreaSelect({ instance: true })
+        if ($('#Mosaic').is(':visible')) {
+          ias.setOptions({ hide: true })
+          $('#Mosaic').hide('slow')
+        } else {
+          $('#Mosaic').show('slow', function () {
+            ias.setOptions({ show: true })
+            ias.update()
+          })
+        }
+      }
+      function para_pop(text, div) {
+        $('#para_pop').html(text)
+        $('#para_pop').css('display', 'block')
+        $('#para_pop').css('top', $(div).offset().top)
+        $('#para_pop').show()
+      }
+
+      function set_crop() {
+        set_state(1)
+
+        var ias = $('#Mosaic').imgAreaSelect({ instance: true })
+        var sel = ias.getSelection()
+
+        loadImage('images/Mosaic.png').then((inputMat) => {
+          inputMosaic = inputMat
+
+          cropImage(
+            inputMat,
+            'layer4Image',
+            sel.x1,
+            sel.y1,
+            sel.width,
+            sel.height
+          )
+        })
+      }
+
+      function cropImage(inputMat, output_img, x, y, w, h) {
+        let src = inputMat
+        let rect = new cv.Rect(x, y, w, h)
+        let dst = new cv.Mat(w, h, cv.CV_8UC3)
+        dst = src.roi(rect)
+        croppedImage = dst.clone()
+        let canvas = document.createElement('canvas')
+        cv.imshow(canvas, dst)
+        let dataUrl = canvas.toDataURL()
+        let croppedImageElement = document.getElementById(output_img)
+        croppedImageElement.src = dataUrl
+        src.delete()
+        dst.delete()
+      }
+
+      function moveElementDown(i) {
+        //swap
+        var x = i % 3
+        var y = x + 1
+        var j = i
+        var p = $('#el' + y).attr('value')
+        $('#el' + y).attr('value', $('#el' + j).attr('value'))
+        $('#el' + j).attr('value', p)
+        for (p = 1; p <= 3; p++) {
+          if ($('input[name=order_' + p + ']').attr('value') == j) {
+            j = p
+            break
+          }
+        }
+        for (p = 1; p <= 3; p++) {
+          if ($('input[name=order_' + p + ']').attr('value') == y) {
+            y = p
+            break
+          }
+        }
+        var k = $('input[name=order_' + y + ']').attr('value')
+        $('input[name=order_' + y + ']').attr(
+          'value',
+          $('input[name=order_' + j + ']').attr('value')
+        )
+        $('input[name=order_' + j + ']').attr('value', k)
+      }
+
+      function moveElementUp(i) {
+        var y = i - 1 >= 1 ? i - 1 : 3
+        var j = i
+        var p = $('#el' + y).attr('value')
+        $('#el' + y).attr('value', $('#el' + j).attr('value'))
+        $('#el' + j).attr('value', p)
+        for (p = 1; p <= 3; p++) {
+          if ($('input[name=order_' + p + ']').attr('value') == j) {
+            j = p
+            break
+          }
+        }
+        for (p = 1; p <= 3; p++) {
+          if ($('input[name=order_' + p + ']').attr('value') == y) {
+            y = p
+            break
+          }
+        }
+        var k = $('input[name=order_' + y + ']').attr('value')
+        $('input[name=order_' + y + ']').attr(
+          'value',
+          $('input[name=order_' + j + ']').attr('value')
+        )
+        $('input[name=order_' + j + ']').attr('value', k)
+      }
+
+      function doTransform() {
+        if (jstate == 0) {
+          alert('First click on Mosaic and select the Input Image.')
+          return
+        }
+
+        // Retrieve user inputs
+        let angle = 0,
+          xTrans = 0,
+          yTrans = 0,
+          scaleFactor = 1
+
+        // Check inputs when single1 is '1'
+        if (single1 == '1') {
+          if (document.getElementById('mag').checked) {
+            let sliderValue = parseFloat(
+              document.getElementById('Slider4-display').value
+            )
+            if (sliderValue == 0) {
+              alert('Select a value on the slider for scaling.')
+              return
+            }
+            scaleFactor = sliderValue * 2
+            if (!document.getElementById('magnify1').checked) {
+              scaleFactor = 1 / scaleFactor // Downscale
+            }
+          }
+
+          if (document.getElementById('rot').checked) {
+            angle =
+              parseFloat(document.getElementById('Slider1-display').value) || 0
+            if (angle == 0) {
+              alert('Select a value on the slider for rotation.')
+              return
+            }
+          }
+
+          if (document.getElementById('trans').checked) {
+            xTrans =
+              parseFloat(document.getElementById('Slider2-display').value) || 0
+            yTrans =
+              parseFloat(document.getElementById('Slider3-display').value) || 0
+          }
+        } else {
+          angle =
+            parseFloat(document.getElementById('Slider1-display').value) || 0
+          xTrans =
+            parseFloat(document.getElementById('Slider2-display').value) || 0
+          yTrans =
+            parseFloat(document.getElementById('Slider3-display').value) || 0
+
+          let sliderValue =
+            parseFloat(document.getElementById('Slider4-display').value) || 1
+          scaleFactor = sliderValue * 2
+          if (!document.getElementById('magnify1').checked) {
+            scaleFactor = 1 / scaleFactor // Downscale
+          }
+        }
+
+        if (!croppedImage) {
+          alert('Crop an image before applying transformations.')
+          return
+        }
+
+        set_state(2)
+
+        // Clone the source image
+        let src = croppedImage.clone()
+        let dst = new cv.Mat()
+
+        // Step 1: Calculate new bounding box size after rotation and scaling
+        let width = src.cols,
+          height = src.rows
+        let radians = (Math.abs(angle) * Math.PI) / 180.0
+        let cos = Math.abs(Math.cos(radians))
+        let sin = Math.abs(Math.sin(radians))
+
+        let newWidth = Math.round((width * cos + height * sin) * scaleFactor)
+        let newHeight = Math.round((width * sin + height * cos) * scaleFactor)
+
+        let outputSize = new cv.Size(newWidth, newHeight)
+
+        // Step 2: Compute the affine transformation matrix
+        let center = new cv.Point(width / 2, height / 2)
+        let rotationMatrix = cv.getRotationMatrix2D(center, angle, scaleFactor)
+
+        // Adjust for the new size (to keep the image centered)
+        rotationMatrix.data64F[2] += (newWidth - width) / 2 + xTrans // Shift x
+        rotationMatrix.data64F[5] += (newHeight - height) / 2 + yTrans // Shift y
+
+        // Step 3: Apply warpAffine with the corrected size
+        cv.warpAffine(
+          src,
+          dst,
+          rotationMatrix,
+          outputSize, // Dynamically calculated size
+          cv.INTER_LINEAR,
+          cv.BORDER_CONSTANT,
+          new cv.Scalar()
+        )
+
+        // Display the images
+        let content = `<div class="item">
+    <h2>Initial Image</h2>
+    <img id="initialImage" alt="picture" width="140px" height="140px"/>
+  </div>
+  <div class="item">
+    <h2>Processed Image</h2>
+    <img id="processedImage" alt="picture" width="140px" height="140px"/>
+    <dl class="details ui-helper-clearfix"></dl>
+  </div><br><br>`
+
+        $('#sliderContent').html(content)
+
+        let canvas1 = document.createElement('canvas')
+        cv.imshow(canvas1, croppedImage)
+        document.getElementById('initialImage').src = canvas1.toDataURL()
+
+        let canvas2 = document.createElement('canvas')
+        cv.imshow(canvas2, dst)
+        document.getElementById('processedImage').src = canvas2.toDataURL()
+        document.getElementById('layer5outputImage').src = canvas2.toDataURL()
+
+        let myImage = new Image()
+        myImage.name = $('img', $('#Layer-5')).attr('name')
+        myImage.src = $('img', $('#Layer-5')).attr('src')
+        myImage.onload = function () {
+          $('dims', '#imgInfo').html(this.height + ' x ' + this.width)
+          $('img', $('#Layer-5')).css('height', this.height * 0.93666)
+          $('img', $('#Layer-5')).css('width', this.width * 0.93666)
+        }
+
+        // Clean up memory
+        src.delete()
+        dst.delete()
+      }
+
+      jQuery.fn.popUpImg = function () {
+        var o = $(this[0]) // It's your element
+        $('#fullImg', $('.imageFull', '#Layer-1')).attr(
+          'src',
+          $('img', $(o)).attr('src')
+        )
+        $('.imageFull').show('slow')
+      }
+
+      function disableRest(name) {
+        if (name == '#tran') {
+          $('#Interpol').addClass('transdiv')
+          $('input', '#Interpol').attr('disabled', 'true')
+        } else {
+          $('#Interpol').removeClass('transdiv')
+          $('input', '#Interpol').removeAttr('disabled')
+        }
+        $('input', '.param').attr('disabled', 'disabled')
+        $('input', name).removeAttr('disabled')
+        $('.paraSlider', '.param').each(function (index) {
+          $(this).slider('disable')
+        })
+        $('.paraSlider', name).slider('enable')
+        $('.param').addClass('transdiv')
+        $(name).removeClass('transdiv')
+      }
+
+      function confirmTo(url) {
+        var response = confirm('You will lose Session Data: Continue?')
+        if (response) {
+          window.location.href = url
+        }
+      }
+
+      var exp, assess, id, state, currentS
+
+      var session = {
+        start: function () {
+          exp = 'affine'
+          assess = getQueryVariable('assess')
+          id = getQueryVariable('assess')
+          state = 0
+          currentS = 1
+        },
+      }
+
+      // Function to retrieve query parameters from URL
+      function getQueryVariable(variable) {
+        var query = window.location.search.substring(1)
+        var vars = query.split('&')
+        for (var i = 0; i < vars.length; i++) {
+          var pair = vars[i].split('=')
+          if (decodeURIComponent(pair[0]) == variable) {
+            return decodeURIComponent(pair[1])
+          }
+        }
+        return null
+      }
+
+      function loadImage(url) {
+        return new Promise((resolve, reject) => {
+          let img = new Image()
+          img.crossOrigin = 'Anonymous'
+          img.src = url
+          img.onload = () => {
+            let canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+            let ctx = canvas.getContext('2d')
+            ctx.drawImage(img, 0, 0)
+            let imgData = ctx.getImageData(0, 0, img.width, img.height)
+            let mat = new cv.Mat(imgData.height, imgData.width, cv.CV_8UC4)
+            mat.data.set(imgData.data)
+            resolve(mat)
+          }
+          img.onerror = (err) => reject(err)
+        })
+      }
+
+      jQuery.fn.popUpImg = function () {
+        var o = $(this[0]) // It's your element
+        $('#fullImg', $('.imageFull', '#Layer-1')).attr(
+          'src',
+          $('img', $(o)).attr('src')
+        )
+        $('.imageFull').show('slow')
+      }
+      function disableRest(name) {
+        if (name == '#tran') {
+          $('#Interpol').addClass('transdiv')
+          $('input', '#Interpol').attr('disabled', 'true')
+        } else {
+          $('#Interpol').removeClass('transdiv')
+          $('input', '#Interpol').removeAttr('disabled')
+        }
+        $('input', '.param').attr('disabled', 'disabled')
+        $('input', name).removeAttr('disabled')
+        $('.paraSlider', '.param').each(function (index) {
+          $(this).slider('disable')
+        })
+        $('.paraSlider', name).slider('enable')
+        $('.param').addClass('transdiv')
+        $(name).removeClass('transdiv')
+      }
+
+      function confirmTo(url) {
+        var response = confirm('You will lose Session Data: Continue?')
+        if (response) {
+          window.location.href = url
+        }
+      }
+
+      function initialize() {
+        // Get the image data from sessionStorage
+        const imageData = sessionStorage.getItem('croppedImage')
+
+        if (imageData) {
+          // Convert base64 string back to image and create OpenCV mat
+          const img = new Image()
+          img.onload = function () {
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(img, 0, 0)
+
+            // Create OpenCV mat from image data
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+            croppedImage = new cv.Mat(imgData.height, imgData.width, cv.CV_8UC4)
+            croppedImage.data.set(imgData.data)
+
+            // Display the image
+            const layer4Image = document.getElementById('layer4Image')
+            layer4Image.src = imageData
+
+            // Optional: Clear the data from sessionStorage if you don't need it anymore
+            sessionStorage.removeItem('croppedImage')
+          }
+          img.src = imageData
+        }
+      }
+
+      function onOpenCvReady() {
+        // console.log("OpenCV.js is ready.", cv.getBuildInformation);
+
+        $(document).ready(function () {
+          session.start()
+          initialize()
+          set_state(1)
+
+          if (getQueryVariable('order')) {
+            const order = getQueryVariable('order')
+
+            if (order === '1 2 3') {
+              $('input[name=para]').each(function () {
+                $(this).removeAttr('checked')
+              })
+
+              const sc2 = parseInt(getQueryVariable('sc2'))
+              const ang = parseInt(getQueryVariable('ang'))
+
+              if (sc2 > 0) {
+                $('#mag').click()
+              } else if (ang > 0) {
+                $('#rot').click()
+              } else {
+                $('#trans').click()
+              }
+            } else {
+              $('radio2').click()
+              const orderParts = order.split(' ')
+              $('#order_1').attr('value', orderParts[1])
+              $('#order_2').attr('value', orderParts[2])
+              $('#order_3').attr('value', orderParts[3])
+            }
+          }
+
+          if (getQueryVariable('inter')) {
+            const inter = parseInt(getQueryVariable('inter'))
+
+            $('input[name=Operatn]').each(function () {
+              $(this).removeAttr('checked')
+            })
+            document.Interpol.interTech[inter - 1].checked = true
+          }
+
+          if (getQueryVariable('sc2')) {
+            const sc2 = parseInt(getQueryVariable('sc2'))
+
+            $('input[name=magnify]').each(function () {
+              $(this).removeAttr('checked')
+            })
+            $(`#magnify${sc2 + 1}`).attr('checked', 'true')
+          }
+
+          const exp = getQueryVariable('exp')
+          const assess = getQueryVariable('assess')
+
+        //   if (exp === 'piping' || assess !== null) {
+        //   } else {
+        //     set_state(0)
+        //   }
+
+          $('.imageFull').hide()
+          $('#popUp').hide()
+          $('#radio').buttonset()
+          $('#radio').button('refresh')
+
+          $('button1').each(function () {
+            if (!assess) {
+              $(this).show()
+            }
+          })
+
+          $('button1', '#Layer-2').button()
+          $('button1', '#Layer-2').click(function () {
+            toggleMosaic()
+          })
+
+          $('button2', '#Layer-2').button()
+
+          $('button5', '.Parameters').button()
+          $('button5', '.Parameters').click(function () {
+            $('#popUp').show()
+          })
+          $('button5', '.Parameters').hide()
+
+          $('button6', '#popUp').button()
+          $('button6', '#popUp').click(function () {
+            $('#popUp').hide()
+          })
+
+          $('button4', '#Layer-2').button()
+          $('button4', '#Layer-2').click(function () {
+            if (!assess) {
+              set_state(0)
+            } else {
+              set_state(1)
+            }
+
+            $('dims', '#imgInfo').html('____ x ____ ')
+
+            $('img', $('#Layer-5')).attr('src', 'images/Layer-5.jpg')
+            $('img', $('#Layer-4')).attr(
+              'src',
+              assess
+                ? 'images/assess/' + id + '_' + currentS + '.png'
+                : 'images/Layer-4.jpg'
+            )
+
+        //     $('#sliderContent').replaceWith(
+        //       '<div id="sliderContent" class="ui-corner-all">\
+        //     <div class="viewer ui-corner-all">\
+        //         <div class="content-conveyor ui-helper-clearfix">\
+        //             <div class="item">\
+        //                 <h2>' +
+        //         (assess ? 'Assessment' : 'Start') +
+        //         '</h2>\
+        //                 <img src="' +
+        //         (assess
+        //           ? 'images/assess/' + id + '_' + currentS + '.png'
+        //           : 'images/Mosaic.png') +
+        //         '" alt="picture" width="140px" height="140px"/>\
+        //                 <dl class="details ui-helper-clearfix">\
+        //                     <dt>' +
+        //         (assess
+        //           ? 'This is the Input Image. Perform Operations to get the above result.'
+        //           : 'Select a portion of the Mosaic on the Right and Transform...') +
+        //         '</dt>\
+        //                 </dl>\
+        //             </div>\
+        //         </div>\
+        //     </div>\
+        //     <div id="slider"></div>\
+        // </div>'
+        //     )
+          })
+
+          $('button4', '#Layer-2').click(function () {
+            $('.paraSlider').slider('option', 'value', '0')
+            $('dims', '#imgInfo').html('__ x __')
+
+            // Check the condition for 'exp' and 'assess' using getQueryVariable
+            if (
+              getQueryVariable('exp') !== 'piping' &&
+              getQueryVariable('assess') === null
+            ) {
+              set_state(0)
+            } else {
+              set_state(1)
+            }
+
+            $('img', $('#Layer-5')).attr('src', 'images/Layer-5.jpg')
+
+            // Check the condition for 'exp' again
+            if (getQueryVariable('exp') !== 'piping') {
+              const assessSrc =
+                getQueryVariable('assess') !== null
+                  ? `images/temp/${sessionStorage.getItem(
+                      'id'
+                    )}_${sessionStorage.getItem('currentS')}_result.png`
+                  : 'images/Layer-4.jpg'
+
+              $('img', $('#Layer-4')).attr('src', assessSrc)
+            }
+
+            // Replace #sliderContent dynamically
+            const sliderContentHtml = `
+              <div id="sliderContent" class="ui-corner-all">
+                <div class="viewer ui-corner-all">
+                  <div class="content-conveyor ui-helper-clearfix">
+                    <div class="item">
+                      <h2>${
+                        getQueryVariable('assess') !== null
+                          ? 'Assessment'
+                          : 'Start'
+                      }</h2>
+                      <img src="${
+                        getQueryVariable('assess') !== null
+                          ? `images/temp/${sessionStorage.getItem(
+                              'id'
+                            )}_${sessionStorage.getItem('currentS')}.png`
+                          : 'images/Mosaic.png'
+                      }" alt="picture" width="140px" height="140px"/>
+                      <dl class="details ui-helper-clearfix">
+                        <dt>${
+                          getQueryVariable('assess') !== null
+                            ? 'This is the Input Image. Perform Operations to get the above result.'
+                            : 'Select a portion of the Mosaic on the Right and Transform...'
+                        }</dt>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div id="slider"></div>
+              </div>`
+
+            $('#sliderContent').replaceWith(sliderContentHtml)
+
+            resetPos()
+          })
+
+          $('button2', '#Layer-2').click(function () {
+            doTransform()
+          })
+
+          $('button3', '#zoom').button()
+          $('button3', '#zoom').click(function () {
+            if ($('img', '#Layer-5').attr('height') < 281) {
+              alert('This is the full size.')
+              return
+            }
+
+            if (jstate == 2) {
+              $('#Layer-5').popUpImg()
+            } else {
+              alert("'Run' and get an output first.")
+            }
+          })
+          single1 = '1'
+          $('#Mosaic').imgAreaSelect({
+            handles: true,
+            movable: true,
+            persistent: true,
+            resizable: false,
+            x1: 300,
+            y1: 300,
+            x2: 600,
+            y2: 600,
+            hide: false,
+            imageHeight: 900,
+            imageWidth: 900,
+          })
+          toggleMosaic()
+
+          $('button7', '#Layer-2').button()
+          $('button7', '#Layer-2').click(function () {
+            if (jstate > 1) {
+              var answer = confirm('Retain Changes?')
+              if (answer) {
+                // Simulating the functionality of write.php in JavaScript
+                let itemContent = $('.item:last').html()
+                let item = '<div class="item">' + itemContent + '</div>'
+
+                // Mimicking the PHP preg_replace functionality
+                item = item.replace(/140/, '281')
+                item = item.replace(/\\"/g, '"')
+
+                // Simulating writing to a file by appending the processed item to sessionStorage
+                let tempFileKey = `temp_${sessionStorage.getItem('id')}p`
+                let existingContent = sessionStorage.getItem(tempFileKey) || ''
+                sessionStorage.setItem(tempFileKey, existingContent + item)
+
+                // Simulating updating the session state
+                sessionStorage.setItem(
+                  'currentS',
+                  sessionStorage.getItem('state')
+                )
+
+                // Redirecting to the target page
+                window.location.href = 'piping.php?exp=piping'
+              } else {
+                // Redirecting without saving changes
+                window.location.href = 'piping.php?exp=piping'
+              }
+            }
+          })
+
+          // new js
+          var titleText = assess ? 'Assessment' : 'Start'
+          $('#itemTitle').text(titleText)
+
+          var imgSrc = assess
+            ? 'images/assess/' + id + '_' + currentS + '.png'
+            : 'images/Mosaic.png'
+          $('#itemImage').attr('src', imgSrc)
+
+          var descriptionText = assess
+            ? 'This is the Input Image. Perform Operations to get the above result.'
+            : 'Select a portion of the Mosaic on the Right and Transform...'
+          $('#itemDescription').text(descriptionText)
+
+          var imgSrc = ''
+          if (assess) {
+            imgSrc = 'images/assess/' + id + '_' + currentS + '.png'
+          } else {
+            imgSrc = 'images/Layer-4.jpg'
+          }
+
+          $('#layer4Image').attr('src', imgSrc)
+        })
+      }
+
+      Module = {
+        onRuntimeInitialized: onOpenCvReady,
+      }
+    </script>
+  </head>
+
+  <body>
+    <!-- This is 'Backgound_bkgnd_center_jpg' -->
+    <div id="Layer-1" class="Backgound_bkgnd_center_jpg">
+      <div id="para_pop"></div>
+
+      <!-- This is 'Mosaic_jpg' -->
+      <div id="Mosaic" class="Mosaic_jpg">
+        <img
+          id="Mosaic-img"
+          src="images/Mosaic.png"
+          width="513"
+          height="513"
+          alt="Mosaic"
+        />
+      </div>
+
+      <!-- This is 'Thumbnails_jpg' -->
+      <div id="Layer-7" class="Thumbnails_jpg">
+        <div id="sliderContent" class="ui-corner-all">
+          <div class="viewer ui-corner-all">
+            <div class="content-conveyor ui-helper-clearfix">
+              <div class="item">
+                <h2 id="itemTitle"></h2>
+                <img
+                  id="itemImage"
+                  src=""
+                  alt="picture"
+                  width="140px"
+                  height="140px"
+                />
+                <dl class="details ui-helper-clearfix">
+                  <dt id="itemDescription"></dt>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div id="slider"></div>
+        </div>
+      </div>
+
+      <!-- This Is 'outputLayer_jpg' -->
+      <div id="Layer-5" class="outputLayer_jpg">
+        <img
+          src="images/Layer-5.jpg"
+          alt="outputLayer"
+          id="layer5outputImage"
+          width="281px"
+          height="281px"
+        />
+      </div>
+
+      <!-- //////////////////////////////////////////////////////////// -->
+      <!-- This is 'InputLayer_jpg' -->
+      <div id="Layer-4" class="InputLayer_jpg">
+        <img
+          id="layer4Image"
+          src=""
+          width="281"
+          height="281"
+          alt="InputLayer"
+        />
+      </div>
+
+      <!-- This is 'TopBar_jpg' -->
+      <div id="Layer-3" class="TopBar_jpg">
+
+        <div id="topMenu">
+          <div class="menu">
+  
+          </div>
+        </div>
+      </div>
+
+      <div id="imgInfo">
+        <table>
+          <tr>
+            <th width="290">Input size</th>
+            <th>Output size</th>
+          </tr>
+          <tr>
+            <td>300 x 300</td>
+            <td>
+              <dims> ____ x ____ </dims>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+	<div id="zoom">
+	<button3>View Full Size Image</button3>
+	</div>
+      <!-- This is 'Parameters_jpg' -->
+      <div id="Layer-2">
+        <h2 style="text-align: center">Affine transformation</h2>
+        <div id="nextBox"></div>
+
+        <button1 style="display: none">Select Image</button1>
+        <button4>Reset</button4>
+        <button2>Run</button2>
+        <br /><br />
+        <div id="radio">
+          <input
+            type="radio"
+            id="single"
+            name="choice"
+            checked="checked"
+            onclick="$('input[name=para]','.Parameters').attr('style','margin-right: 12px;');	
+		   $('input[name^=order]').attr('style','display:none;');			   
+		   $('button5','.Parameters').hide();
+		   disableRest('#magn'); $('#mag').attr('checked','true'); single1='1';"
+          /><label for="single">Single Choice</label>
+          <input
+            type="radio"
+            id="radio2"
+            name="choice"
+            onclick="$('input[name=para]','.Parameters').attr('style','display:none');
+		   $('input[name^=order]').attr('style','text-align: center; border: 1px cyan solid;');
+		   $('input','.param').removeAttr('disabled');
+		   $('.param').removeClass('transdiv');
+		   $('button5','.Parameters').show();
+		   $('input','#Interpol').attr('disabled','true');
+		   $('input','#Interpol').removeAttr('checked');
+		   $('#ytrans').attr('checked','checked');
+		   $('#xtrans').attr('checked','checked');
+		   $('#Interpol').addClass('transdiv'); single1='0';
+		   $('#popUp').show();
+		$('.paraSlider','.param').each(function(){$(this).slider('enable');});
+		   $('#inter1').attr('checked','true'); "
+          /><label for="radio2">Multiple Choice</label>
+        </div>
+
+        <div class="Parameters">
+          <table>
+            <tr>
+              <td width="150px">
+                <h3>
+                  <input
+                    id="mag"
+                    type="radio"
+                    name="para"
+                    value="1"
+                    checked
+                    onclick="disableRest('#magn');"
+                    style="margin-right: 12px"
+                  />
+                  <input
+                    type="text"
+                    id="order_1"
+                    name="order_1"
+                    size="1"
+                    maxlength="1"
+                    value="1"
+                    style="text-align: right; display: none"
+                    readonly
+                  />
+                  Scaling (2^x)
+                </h3>
+                <div id="magn" class="param">
+                  <input id="magnify1" type="radio" name="magnify" value="1" />
+                  Upscale
+                  <br />
+                  <input
+                    id="magnify2"
+                    type="radio"
+                    name="magnify"
+                    value="2"
+                    checked
+                  />
+                  Downscale
+                  <br />
+                  x :
+                  <input
+                    type="text"
+                    id="Slider4-display"
+                    maxlength="10"
+                    value="0"
+                    size="3"
+                    readonly
+                  />
+                  <div id="slider-4" class="paraSlider"></div>
+
+                  <script type="text/javascript">
+                    $(function () {
+                      // Replace PHP logic with JavaScript variable
+                      function getQueryParam(param) {
+                        const urlParams = new URLSearchParams(
+                          window.location.search
+                        )
+                        return urlParams.has(param)
+                          ? parseInt(urlParams.get(param), 10)
+                          : 0
+                      }
+                      const sc1Value = getQueryParam('sc1')
+
+                      $('#slider-4').slider({
+                        value: sc1Value,
+                        min: 0,
+                        max: 5,
+                        step: 1,
+                        slide: function (event, ui) {
+                          $('#Slider4-display').attr('value', ui.value)
+                        },
+                      })
+
+                      $('#Slider4-display').attr(
+                        'value',
+                        $('#slider-4').slider('option', 'value')
+                      )
+                    })
+                  </script>
+                </div>
+              </td>
+              <td width="50px">
+                <div id="Interpol">
+                  Interpolation Technique :
+                  <form name="Interpol">
+                    <input
+                      id="inter1"
+                      type="radio"
+                      name="interTech"
+                      value="1"
+                      checked
+                    />Nearest<br />
+                    <input
+                      type="radio"
+                      name="interTech"
+                      value="2"
+                    />Bilinear<br />
+                    <input
+                      type="radio"
+                      name="interTech"
+                      value="3"
+                    />Bicubic<br />
+                  </form>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="2">
+                <h3>
+                  <input
+                    id="rot"
+                    name="para"
+                    type="radio"
+                    value="2"
+                    onclick="disableRest('#rotn');"
+                    style="margin-right: 12px"
+                  />
+                  <input
+                    type="text"
+                    id="order_2"
+                    name="order_2"
+                    size="1"
+                    maxlength="1"
+                    value="2"
+                    style="text-align: right; display: none"
+                    readonly
+                  />
+                  Rotation
+                </h3>
+                <div id="rotn" class="param transdiv">
+                  (Anti-clockwise 0-360&deg;)
+                  <br />
+                  Angle in degrees:
+                  <input
+                    type="text"
+                    id="Slider1-display"
+                    maxlength="10"
+                    value="0"
+                    size="3"
+                  />
+
+                  <div id="slider-1" class="paraSlider"></div>
+
+                  <!-- ////////////////////////////////////////////////////////// -->
+                  <script type="text/javascript">
+                    $(function () {
+                      // Replace PHP logic with JavaScript variable
+                      const angValue =
+                        typeof someExternalValue !== 'undefined'
+                          ? someExternalValue
+                          : 0 // Replace 'someExternalValue' with actual logic
+
+                      $('#slider-1').slider({
+                        value: angValue,
+                        min: 0,
+                        max: 360,
+                        step: 2,
+                        slide: function (event, ui) {
+                          $('#Slider1-display').attr('value', ui.value)
+                        },
+                      })
+
+                      $('#Slider1-display').change(function () {
+                        const k = parseInt(
+                          $('#Slider1-display').attr('value'),
+                          10
+                        )
+                        if (k > 360) {
+                          $('#slider-1').slider('option', 'value', 360)
+                          $('#Slider1-display').attr('value', 360)
+                        } else if (k < 0) {
+                          $('#slider-1').slider('option', 'value', 0)
+                          $('#Slider1-display').attr('value', 0)
+                        } else if (k >= 0 && k <= 360) {
+                          $('#slider-1').slider('option', 'value', k)
+                        }
+                      })
+
+                      $('#Slider1-display').attr(
+                        'value',
+                        $('#slider-1').slider('option', 'value')
+                      )
+                    })
+                  </script>
+                </div>
+              </td>
+            </tr>
+          </table>
+          <h3>
+            <input
+              id="trans"
+              type="radio"
+              name="para"
+              value="3"
+              onclick="disableRest('#tran');"
+              style="margin-right: 12px"
+            />
+            <input
+              type="text"
+              id="order_3"
+              name="order_3"
+              size="1"
+              maxlength="1"
+              value="3"
+              style="text-align: right; display: none"
+              readonly
+            />
+            Translation
+          </h3>
+
+          <div id="tran" class="param transdiv">
+            X-Translation (Pixels)
+            <input
+              type="text"
+              id="Slider2-display"
+              maxlength="10"
+              value="0"
+              size="3"
+            />
+            <div id="slider-2" class="paraSlider"></div>
+
+            <script type="text/javascript">
+              $(function () {
+                function getQueryParam(param) {
+                  const urlParams = new URLSearchParams(window.location.search)
+                  return urlParams.has(param)
+                    ? parseInt(urlParams.get(param), 10)
+                    : 0
+                }
+
+                const xtrValue = getQueryParam('xtr') // Extract 'xtr' parameter from the URL
+                $('#slider-2').slider({
+                  value: xtrValue,
+                  min: 0,
+                  max: 300,
+                  step: 2,
+                  slide: function (event, ui) {
+                    $('#Slider2-display').attr('value', ui.value)
+                  },
+                })
+
+                $('#Slider2-display').change(function () {
+                  var k = parseInt($('#Slider2-display').attr('value'), 10)
+                  if (k > 300) {
+                    $('#slider-2').slider('option', 'value', 300)
+                    $('#Slider2-display').attr('value', 300)
+                  } else if (k < 0) {
+                    $('#slider-2').slider('option', 'value', 0)
+                    $('#Slider2-display').attr('value', 0)
+                  } else if (k >= 0 && k <= 300) {
+                    $('#slider-2').slider('option', 'value', k)
+                  }
+                })
+
+                $('#Slider2-display').attr(
+                  'value',
+                  $('#slider-2').slider('option', 'value')
+                )
+              })
+            </script>
+
+            <br />Y-Translation (Pixels)
+            <input
+              type="text"
+              id="Slider3-display"
+              maxlength="10"
+              value="0"
+              size="3"
+            />
+            <div id="slider-3" class="paraSlider"></div>
+
+            <script type="text/javascript">
+              $(function () {
+                // Replace PHP logic with JavaScript variable
+
+                function getQueryParam(param) {
+                  const urlParams = new URLSearchParams(window.location.search)
+                  return urlParams.has(param)
+                    ? parseInt(urlParams.get(param), 10)
+                    : 0
+                }
+                const ytrValue = getQueryParam('ytr')
+
+                $('#slider-3').slider({
+                  value: ytrValue,
+                  min: 0,
+                  max: 300,
+                  step: 2,
+                  slide: function (event, ui) {
+                    $('#Slider3-display').attr('value', ui.value)
+                  },
+                })
+
+                $('#Slider3-display').change(function () {
+                  const k = parseInt($('#Slider3-display').attr('value'), 10)
+                  if (k > 300) {
+                    $('#slider-3').slider('option', 'value', 300)
+                    $('#Slider3-display').attr('value', 300)
+                  } else if (k < 0) {
+                    $('#slider-3').slider('option', 'value', 0)
+                    $('#Slider3-display').attr('value', 0)
+                  } else if (k >= 0 && k <= 300) {
+                    $('#slider-3').slider('option', 'value', k)
+                  }
+                })
+
+                $('#Slider3-display').attr(
+                  'value',
+                  $('#slider-3').slider('option', 'value')
+                )
+              })
+            </script>
+          </div>
+          <br />
+          <button5>Change Order of Operations</button5>
+        </div>
+      </div>
+
+      <div id="popUp">
+        <h4>Change Order of Operation</h4>
+        (first to last)
+        <form action="#" method="post">
+          <table
+            style="
+              border-width: 1px;
+              border-spacing: 3px;
+              border-style: dashed;
+              border-color: gray;
+              border-collapse: separate;
+              margin: 15px;
+            "
+          >
+            <tr>
+              <td><input type="text" size="20" value="Scaling" id="el1" /></td>
+              <td>
+                <input
+                  type="button"
+                  onClick="moveElementUp(1); "
+                  value="&uarr;"
+                />
+                <input
+                  type="button"
+                  onClick="moveElementDown(1); "
+                  value="&darr;"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td><input type="text" size="20" value="Rotation" id="el2" /></td>
+              <td>
+                <input
+                  type="button"
+                  onClick="moveElementUp(2);"
+                  value="&uarr;"
+                />
+                <input
+                  type="button"
+                  onClick="moveElementDown(2);"
+                  value="&darr;"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <input type="text" size="20" value="Translation" id="el3" />
+              </td>
+              <td>
+                <input
+                  type="button"
+                  onClick="moveElementUp(3);"
+                  value="&uarr;"
+                />
+                <input
+                  type="button"
+                  onClick="moveElementDown(3);"
+                  value="&darr;"
+                />
+              </td>
+            </tr>
+          </table>
+        </form>
+        <button6>Done</button6>
+      </div>
+    </div>
+  </body>
+</html>

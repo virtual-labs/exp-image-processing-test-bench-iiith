@@ -1,0 +1,750 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script class="gtm">
+      ;(function (w, d, s, l, i) {
+        w[l] = w[l] || []
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' })
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : ''
+        j.async = true
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl
+        f.parentNode.insertBefore(j, f)
+      })(window, document, 'script', 'dataLayer', 'GTM-W59SWTR')
+    </script>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <!-- This file was originally generated at http://psd2cssonline.com on September 16, 2010, 10:04 am -->
+    <!-- psd2css Online version 1.85 -->
+
+    <!-- <title>Virtual Lab in Image Processing</title> -->
+
+    <!-- Some META tags to help with Search Engine Optimization.  Please
+  note however that META tags are NOT a magic bullet to get your web page
+  to the top of search engine rankings.  They are just part of that effort.  You
+  can get more information by googling SEO or visiting the psd2css Online forums. -->
+    <meta name="description" content="Put the description of this page here" />
+    <meta
+      name="keywords"
+      content="Put keywords for this page here separated by commas"
+    />
+    <meta
+      name="generator"
+      content="psd2css Online - Dynamic Web Pages from your Photoshop Design in seconds"
+    />
+
+    <!-- The CSS Reset from Eric Meyers -->
+    <!-- <link rel="stylesheet" type="text/css" href="cssreset.css" media="screen" /> -->
+
+    <!-- The Primary External CSS style sheet. -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="css/psd2css.css"
+      media="screen"
+    />
+
+    <!-- We use the jquery javascript library for DOM manipulation and
+  some javascript tricks.  We serve the script from Google because its
+  faster than most ISPs.  Get more information and documentation
+  at http://jquery.com
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+  -->
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <!-- All the javascript generated for your design is in this file -->
+    <script type="text/javascript" src="js/psd2css.js"></script>
+
+    <!-- For Jquery UI-->
+    <script
+      type="text/javascript"
+      src="js/jquery-ui-1.8.4.custom.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="css/dark-hive/jquery-ui-1.8.4.custom.css"
+    />
+
+    <!-- For Slider - http://carpe.ambiprospect.com/slider/-->
+    <link type="text/css" rel="StyleSheet" href="css/carpe-slider.css" />
+    <script type="text/javascript" src="js/carpe-slider.js"></script>
+
+    <!--http://www.cssmenumaker.com/builder/menu_info.php?menu=057-->
+    <link type="text/css" rel="StyleSheet" href="menu/menu_style.css" />
+
+    <!--for ImgSelect - http://odyniec.net/projects/imgareaselect/-->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="css/imgareaselect-default.css"
+    />
+    <script type="text/javascript" src="js/jquery.imgareaselect.js"></script>
+
+    <!--for Flot -->
+    <script type="text/javascript" src="js/jquery.flot.js"></script>
+
+    <!--for COntent Slider - Jquery Slider/-->
+    <link rel="stylesheet" type="text/css" href="css/jquery-slider.css" />
+
+    <!-- opencv.js  -->
+    <script
+      async
+      src="https://docs.opencv.org/4.10.0/opencv.js"
+      type="text/javascript"
+    ></script>
+
+    <script type="text/javascript">
+      var inputMosaic = null
+      var croppedImage = null
+      var processedImage = null
+
+      function blinker(i) {
+        if (buttId != 'cancel' && i > 0) {
+          $($(buttId), '#Layer-2').toggleClass('ui-state-hover')
+          setTimeout('blinker(' + (i - 1) + ')', 500)
+        }
+      }
+
+      function set_state(state) {
+        switch (state) {
+          case 0:
+            $('#nextBox').html(
+              "Start the Experiment by clicking on 'Select Image' and selecting an Input Image from the Mosaic"
+            )
+            buttId = 'button1'
+            blinker(10)
+            break
+          case 1:
+            $('#nextBox').html(
+              "Select appropriate parameters and click on 'Run'."
+            )
+            buttId = 'button2'
+            blinker(10)
+            break
+          case 2:
+            $('#nextBox').html(
+                'Note down the results'
+            )
+            break
+        }
+        jstate = state
+      }
+
+      function toggleMosaic() {
+        var ias = $('#Mosaic').imgAreaSelect({ instance: true })
+        if ($('#Mosaic').is(':visible')) {
+          ias.setOptions({ hide: true })
+          $('#Mosaic').hide('slow')
+        } else {
+          $('#Mosaic').show('slow', function () {
+            ias.setOptions({ show: true })
+            ias.update()
+          })
+        }
+      }
+
+      function set_crop() {
+        set_state(1)
+
+        var ias = $('#Mosaic').imgAreaSelect({ instance: true })
+        var sel = ias.getSelection()
+
+        loadImage('images/Mosaicmorph.png').then((inputMat) => {
+          inputMosaic = inputMat
+
+          cropImage(
+            inputMat,
+            'layer4Image',
+            sel.x1,
+            sel.y1,
+            sel.width,
+            sel.height
+          )
+        })
+      }
+
+      function cropImage(inputMat, output_img, x, y, w, h) {
+        let src = inputMat
+        let rect = new cv.Rect(x, y, w, h)
+        let dst = new cv.Mat(w, h, cv.CV_8UC3)
+        dst = src.roi(rect)
+        croppedImage = dst.clone()
+        let canvas = document.createElement('canvas')
+        cv.imshow(canvas, dst)
+        let dataUrl = canvas.toDataURL()
+        let croppedImageElement = document.getElementById(output_img)
+        croppedImageElement.src = dataUrl
+        src.delete()
+        dst.delete()
+      }
+
+      function doTransform() {
+        if (jstate == 0) {
+          alert('First click on Mosaic and select the Input Image.')
+          return
+        }
+
+        var oper
+        var checkBoxes = $('input[name=otype]')
+
+        $.each(checkBoxes, function () {
+          if ($(this).attr('checked')) {
+            oper = $(this).attr('value')
+          }
+        })
+
+        checkBoxes = $('input[name=stype]')
+
+        var shape
+        $.each(checkBoxes, function () {
+          if ($(this).attr('checked')) {
+            shape = $(this).attr('value')
+          }
+        })
+
+        checkBoxes = $('input[name=size]')
+        var size
+        $.each(checkBoxes, function () {
+          if ($(this).attr('checked')) {
+            size = $(this).attr('value')
+          }
+        })
+
+        checkBoxes = $('input[name=ang]')
+        var angle
+        $.each(checkBoxes, function () {
+          if ($(this).attr('checked')) {
+            angle = $(this).attr('value')
+          }
+        })
+        if (!$('#Mosaic').is(':visible')) {
+          set_state(2)
+          $('#slider').remove()
+          size=parseInt(size)
+          if(oper==1){
+            filter='Dilation'
+            processedImage=performDilation(croppedImage,shape,size,angle)
+          }
+          if(oper==2){
+            filter='Erosion'
+            processedImage=performErosion(croppedImage,shape,size,angle)
+          }
+          if(oper==3){
+            filter='Closing'
+            processedImage=performclosing(croppedImage,shape,size,angle)
+          }
+          if(oper==4){
+            filter='Opening'
+            processedImage=performOpening(croppedImage,shape,size,angle)
+          }
+
+          let content = `<div class="item">
+          <h2>Initial Image</h2>
+          <img id="primaryImage" alt="picture" width="140px" height="140px"/>
+        </div>
+        <div class="item">
+        </div>
+        <div class="item">
+          <h2>Processed Image</h2>
+          <img id="processedImage" alt="picture" width="140px" height="140px"/>
+          <dl class="details ui-helper-clearfix"><dt>Image processed using ${filter}</dt></dl>
+
+        </div><br><br>`
+
+          $('#sliderContent').html(content)
+
+          let canvas3 = document.createElement('canvas')
+          cv.imshow(canvas3, processedImage)
+          // following is for showing the output image
+          // in the right output panel and below it as well (the slider thing)
+          document.getElementById('processedImage').src = canvas3.toDataURL()
+          document.getElementById('layer5outputImage').src = canvas3.toDataURL()
+
+          let canvas1 = document.createElement('canvas')
+          cv.imshow(canvas1, croppedImage)
+          document.getElementById('primaryImage').src = canvas1.toDataURL()
+
+          // following is only for showing the size
+          var myImage = new Image()
+          myImage.name = $('img', $('#Layer-5')).attr('name')
+          myImage.src = $('img', $('#Layer-5')).attr('src')
+          myImage.onload = function () {
+            $('dims', '#imgInfo').html(this.height + ' x ' + this.width)
+          }
+        }
+      }
+
+      function GetStructingElem(shape,size,angle){
+        if(shape==1){
+            return cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(size,size));
+        }
+        if(shape==2){
+            return cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(size, size));
+        }
+        if(shape==3){
+            let element = cv.Mat.zeros(size, size, cv.CV_8U);
+            // Calculate the center point
+            let center = new cv.Point(size / 2, size / 2);
+
+            // Calculate the end points of the line based on the angle
+            let radius = size / 2;
+            let x1 = center.x + radius * Math.cos((angle * Math.PI) / 180);
+            let y1 = center.y - radius * Math.sin((angle * Math.PI) / 180); // Negative for image coordinate system
+            let x2 = center.x - radius * Math.cos((angle * Math.PI) / 180);
+            let y2 = center.y + radius * Math.sin((angle * Math.PI) / 180);
+
+            // Draw the line on the matrix
+            cv.line(element, new cv.Point(x1, y1), new cv.Point(x2, y2), new cv.Scalar(255), 1);
+            return element;
+        }
+      }
+
+      function performDilation(src,shape,size,angle) {
+        let dst = new cv.Mat()
+        let M = GetStructingElem(shape,size,angle)
+        let anchor = new cv.Point(-1, -1)
+        // You can try more different parameters
+        cv.dilate(src,dst,M,anchor,1,cv.BORDER_CONSTANT,cv.morphologyDefaultBorderValue())
+        return dst
+      }
+      function performErosion(src,shape,size,angle) {
+        let dst = new cv.Mat()
+        let M = GetStructingElem(shape,size,angle)
+        let anchor = new cv.Point(-1, -1)
+        // You can try more different parameters
+        cv.erode(src,dst,M,anchor,1,cv.BORDER_CONSTANT,cv.morphologyDefaultBorderValue())
+        return dst
+      }
+
+      function performclosing(src,shape,size,angle) {
+        let dst = new cv.Mat()
+        let M = GetStructingElem(shape,size,angle)
+        // You can try more different parameters
+        cv.morphologyEx(src, dst, cv.MORPH_CLOSE, M)
+        return dst
+      }
+
+      function performOpening(src,shape,size,angle) {
+        let dst = new cv.Mat()
+        let M = GetStructingElem(shape,size,angle)
+        let anchor = new cv.Point(-1, -1)
+        // You can try more different parameters
+        cv.morphologyEx(src,dst,cv.MORPH_OPEN,M,anchor,1,cv.BORDER_CONSTANT,cv.morphologyDefaultBorderValue())
+        return dst
+      }
+
+      function confirmTo(url) {
+        var response = confirm('You will lose Session Data: Continue?')
+        if (response) {
+          window.location.href = url
+        }
+      }
+
+      var exp, assess, id, state, currentS
+
+      var session = {
+        start: function () {
+          exp = 'morph'
+          assess = getQueryVariable('assess')
+          id = getQueryVariable('assess')
+          state = 0
+          currentS = 1
+        },
+      }
+
+      // Function to retrieve query parameters from URL
+      function getQueryVariable(variable) {
+        var query = window.location.search.substring(1)
+        var vars = query.split('&')
+        for (var i = 0; i < vars.length; i++) {
+          var pair = vars[i].split('=')
+          if (decodeURIComponent(pair[0]) == variable) {
+            return decodeURIComponent(pair[1])
+          }
+        }
+        return null
+      }
+
+      function loadImage(url) {
+        return new Promise((resolve, reject) => {
+          let img = new Image()
+          img.crossOrigin = 'Anonymous'
+          img.src = url
+          img.onload = () => {
+            let canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+            let ctx = canvas.getContext('2d')
+            ctx.drawImage(img, 0, 0)
+            let imgData = ctx.getImageData(0, 0, img.width, img.height)
+            let mat = new cv.Mat(imgData.height, imgData.width, cv.CV_8UC4)
+            mat.data.set(imgData.data)
+            resolve(mat)
+          }
+          img.onerror = (err) => reject(err)
+        })
+      }
+
+      // Helper function to set the checkbox or radio button based on URL parameters
+      function setCheckedFromURL(paramName) {
+        // Get the URL parameter value
+        const params = new URLSearchParams(window.location.search)
+        const value = params.get(paramName)
+
+        if (value) {
+          // Find checkboxes or radio buttons with the matching name and value
+          const checkBoxes = document.querySelectorAll(
+            `input[name=${paramName}]`
+          )
+          checkBoxes.forEach((box) => {
+            if (box.value === value) {
+              box.click() // Simulate a click to trigger any associated event handlers
+            }
+          })
+        }
+      }
+
+      function initialize() {
+        // Get the image data from sessionStorage
+        const imageData = sessionStorage.getItem('croppedImage')
+
+        if (imageData) {
+          // Convert base64 string back to image and create OpenCV mat
+          const img = new Image()
+          console.log("here")
+          img.onload = function () {
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(img, 0, 0)
+
+            // Create OpenCV mat from image data
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+            croppedImage = new cv.Mat(imgData.height, imgData.width, cv.CV_8UC4)
+            croppedImage.data.set(imgData.data)
+
+            // Display the image
+            console.log("insidfe")
+            const layer4Image = document.getElementById('layer4Image')
+            layer4Image.src = imageData
+
+            // Optional: Clear the data from sessionStorage if you don't need it anymore
+            sessionStorage.removeItem('croppedImage')
+          }
+          img.src = imageData
+        }
+      }
+
+      function onOpenCvReady() {
+        // console.log("OpenCV.js is ready.", cv.getBuildInformation);
+
+        $(document).ready(function () {
+          session.start()
+          initialize()
+
+          // if (exp === 'piping') {
+            set_state(1)
+          // } else if (assess) {
+          //   set_state(1)
+          // } else {
+          //   set_state(0)
+          // }
+
+          $('.imageFull').hide()
+          $('#popUp').hide()
+          //   $('#radio').buttonset()
+          //   $('#radio').button('refresh')
+
+          $('button1').each(function () {
+            if (!assess) {
+              $(this).show()
+            }
+          })
+
+          $('button1', '#Layer-2').button()
+          $('button1', '#Layer-2').click(function () {
+            toggleMosaic()
+          })
+
+          $('button2', '#Layer-2').button()
+          $('button2', '#Layer-2').click(function () {
+            doTransform()
+          })
+
+          //   $('#radio').buttonset()
+          //   $('#radio').button('refresh')
+
+          $('button4', '#Layer-2').button()
+          $('button4', '#Layer-2').click(function () {
+            if (!assess) {
+              set_state(0)
+            } else {
+              set_state(1)
+            }
+
+            $('dims', '#imgInfo').html('____ x ____ ')
+
+            $('img', $('#Layer-5')).attr('src', 'images/Layer-5.jpg')
+            $('img', $('#Layer-4')).attr(
+              'src',
+              assess
+                ? 'images/assess/' + id + '_' + currentS + '.png'
+                : 'images/Layer-4.jpg'
+            )
+
+          //   $('#sliderContent').replaceWith(
+          //     '<div id="sliderContent" class="ui-corner-all">\
+          //     <div class="viewer ui-corner-all">\
+          //         <div class="content-conveyor ui-helper-clearfix">\
+          //             <div class="item">\
+          //                 <h2>' +
+          //       (assess ? 'Assessment' : 'Start') +
+          //       '</h2>\
+          //                 <img src="' +
+          //       (assess
+          //         ? 'images/assess/' + id + '_' + currentS + '.png'
+          //         : 'images/Mosaicmorph.png') +
+          //       '" alt="picture" width="140px" height="140px"/>\
+          //                 <dl class="details ui-helper-clearfix">\
+          //                     <dt>' +
+          //       (assess
+          //         ? 'This is the Input Image. Perform Operations to get the above result.'
+          //         : 'Select a portion of the Mosaic on the Right and Transform...') +
+          //       '</dt>\
+          //                 </dl>\
+          //             </div>\
+          //         </div>\
+          //     </div>\
+          //     <div id="slider"></div>\
+          // </div>'
+          //   )
+          })
+
+          $('button2', '#Layer-2').click(function () {
+            doTransform()
+          })
+
+          $('#Mosaic').imgAreaSelect({
+            handles: true,
+            movable: true,
+            persistent: true,
+            resizable: false,
+            x1: 300,
+            y1: 300,
+            x2: 600,
+            y2: 600,
+            hide: false,
+            imageHeight: 900,
+            imageWidth: 900,
+          })
+          toggleMosaic()
+
+          // Apply the function for each parameter
+          setCheckedFromURL('otype')
+          setCheckedFromURL('stype')
+          setCheckedFromURL('size')
+          setCheckedFromURL('ang')
+
+          // new js
+          var titleText = assess ? 'Assessment' : 'Start'
+          $('#itemTitle').text(titleText)
+
+          var imgSrc = assess
+            ? 'images/assess/' + id + '_' + currentS + '.png'
+            : 'images/Mosaicmorph.png'
+          $('#itemImage').attr('src', imgSrc)
+
+          var descriptionText = assess
+            ? 'This is the Input Image. Perform Operations to get the above result.'
+            : 'Select a portion of the Mosaic on the Right and Transform...'
+          $('#itemDescription').text(descriptionText)
+
+          var imgSrc = ''
+          if (assess) {
+            imgSrc = 'images/assess/' + id + '_' + currentS + '.png'
+          } else {
+            imgSrc = 'images/Layer-4.jpg'
+          }
+
+          $('#layer4Image').attr('src', imgSrc)
+        })
+      }
+
+      Module = {
+        onRuntimeInitialized: onOpenCvReady,
+      }
+    </script>
+  </head>
+
+  <body>
+    <!-- This is 'Backgound_bkgnd_center_jpg' -->
+    <div id="Layer-1" class="Backgound_bkgnd_center_jpg">
+      <!-- This is 'Mosaic_jpg' -->
+      <div id="Mosaic" class="Mosaic_jpg">
+        <img
+          id="Mosaic-img"
+          src="images/Mosaicmorph.png"
+          width="513"
+          height="513"
+          alt="Mosaic"
+        />
+      </div>
+
+      <!-- This is 'Thumbnails_jpg' -->
+      <div id="Layer-7" class="Thumbnails_jpg">
+        <div id="sliderContent" class="ui-corner-all">
+          <div class="viewer ui-corner-all">
+            <div class="content-conveyor ui-helper-clearfix">
+              <div class="item">
+                <h2 id="itemTitle"></h2>
+                <img
+                  id="itemImage"
+                  src=""
+                  alt="picture"
+                  width="140px"
+                  height="140px"
+                />
+                <dl class="details ui-helper-clearfix">
+                  <dt id="itemDescription"></dt>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div id="slider"></div>
+        </div>
+      </div>
+
+      <!-- This Is 'outputLayer_jpg' -->
+      <div id="Layer-5" class="outputLayer_jpg">
+        <img
+          src="images/Layer-5.jpg"
+          alt="outputLayer"
+          id="layer5outputImage"
+          width="281px"
+          height="281px"
+        />
+      </div>
+
+      <!-- This is 'InputLayer_jpg' -->
+      <div id="Layer-4" class="InputLayer_jpg">
+        <img
+          id="layer4Image"
+          src=""
+          width="281"
+          height="281"
+          alt="InputLayer"
+        />
+      </div>
+
+      <div id="Layer-3" class="TopBar_jpg">
+        <div id="topMenu">
+          <div class="menu"></div>
+        </div>
+      </div>
+
+      <div id="imgInfo">
+        <table>
+          <tr>
+            <th width="290">Input size</th>
+            <th>Output size</th>
+          </tr>
+          <tr>
+            <td>300 x 300</td>
+            <td>
+              <dims> ____ x ____ </dims>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- This is 'Parameters_jpg' -->
+      <div id="Layer-2">
+        <h2 style="text-align: center">Morphological Operations</h2>
+        <div id="nextBox"></div>
+
+        <button1 style="display: none">Select Image</button1>
+        <button4>Reset</button4>
+        <button2>Run</button2>
+        <br /><br />
+
+        <div class="Parameters">
+          <h3>&nbsp;Select Operation:</h3>
+          <input
+            type="radio"
+            name="otype"
+            value="1"
+            onclick=""
+            checked
+          />Dilation<br />
+          <input type="radio" name="otype" value="2" onclick="" />Erosion<br />
+          <input type="radio" name="otype" value="3" onclick="" />Closing<br />
+          <input type="radio" name="otype" value="4" onclick="" />Opening<br />
+          <h3>&nbsp;Structuring Element Properties:</h3>
+          <table>
+            <tr>
+              <td width="200px">
+                <b>Shape</b>
+                <div id="type" class="param">
+                  <input
+                    type="radio"
+                    name="stype"
+                    value="1"
+                    onclick="$('#angle').css('display','none');"
+                    checked
+                  />
+                  Disc<br />
+                  <input
+                    type="radio"
+                    name="stype"
+                    value="2"
+                    onclick="$('#angle').css('display','none');"
+                  />
+                  Square<br />
+                  <input
+                    type="radio"
+                    name="stype"
+                    value="3"
+                    onclick="$('#angle').css('display','block');"
+                  />
+                  Line<br />
+                </div>
+              </td>
+              <td width="200px">
+                <b>Size</b><br />
+                <input type="radio" name="size" value="3" /> 3x3 pixels <br />
+                <input type="radio" name="size" value="5" checked /> 5x5 pixels
+                <br />
+                <input type="radio" name="size" value="7" /> 7x7 pixels <br />
+              </td>
+            </tr>
+          </table>
+
+          <br />
+          <div id="angle" style="display: none">
+            <b>Angle from horizontal</b><br />
+            <input type="radio" name="ang" value="0" /> 0 degrees <br />
+            <input type="radio" name="ang" value="30" checked />30 degrees
+            <br />
+            <input type="radio" name="ang" value="60" /> 60 degrees <br />
+            <input type="radio" name="ang" value="90" /> 90 degrees <br />
+          </div>
+        </div>
+
+        <div
+          id="placeholder"
+          style="
+            margin-left: 30px;
+            margin-bottom: 10px;
+            width: 220px;
+            padding-top: 10px;
+            border: solid grey 1px;
+            height: auto;
+            display: none;
+          "
+        ></div>
+      </div>
+    </div>
+  </body>
+</html>
