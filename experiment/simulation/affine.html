@@ -124,7 +124,7 @@ at http://jquery.com
             break
           case 2:
             $('#nextBox').html(
-              "Click on the 'View Full Size Image' Button to view a closeup of the two images or on 'Reset' to start again at the beginning."
+              "Click on 'Reset' to start again at the beginning."
             )
             buttId = 'button3'
             blinker(8)
@@ -306,6 +306,7 @@ at http://jquery.com
         }
 
         set_state(2)
+        
 
         // Clone the source image
         let src = croppedImage.clone()
@@ -612,113 +613,114 @@ at http://jquery.com
 
           $('button4', '#Layer-2').button()
           $('button4', '#Layer-2').click(function () {
-            if (!assess) {
-              set_state(0)
-            } else {
-              set_state(1)
-            }
+          //   if (!assess) {
+          //     set_state(0)
+          //   } else {
+          //     set_state(1)
+          //   }
 
-            $('dims', '#imgInfo').html('____ x ____ ')
+          //   $('dims', '#imgInfo').html('____ x ____ ')
 
             $('img', $('#Layer-5')).attr('src', 'images/Layer-5.jpg')
-            $('img', $('#Layer-4')).attr(
-              'src',
-              assess
-                ? 'images/assess/' + id + '_' + currentS + '.png'
-                : 'images/Layer-4.jpg'
+          //   $('img', $('#Layer-4')).attr(
+          //     'src',
+          //     assess
+          //       ? 'images/assess/' + id + '_' + currentS + '.png'
+          //       : 'images/Layer-4.jpg'
+          //   )
+
+            $('#sliderContent').replaceWith(
+              '<div id="sliderContent" class="ui-corner-all">\
+            <div class="viewer ui-corner-all">\
+                <div class="content-conveyor ui-helper-clearfix">\
+                    <div class="item">\
+                        <h2>' +
+                (assess ? 'Assessment' : 'Start') +
+                '</h2>\
+                        <img src="' +
+                (assess
+                  ? 'images/assess/' + id + '_' + currentS + '.png'
+                  : 'images/Mosaic.png') +
+                '" alt="picture" width="140px" height="140px"/>\
+                        <dl class="details ui-helper-clearfix">\
+                            <dt>' +
+                (assess
+                  ? 'This is the Input Image. Perform Operations to get the above result.'
+                  : 'Select a portion of the Mosaic on the Right and Transform...') +
+                '</dt>\
+                        </dl>\
+                    </div>\
+                </div>\
+            </div>\
+            <div id="slider"></div>\
+        </div>'
             )
-
-        //     $('#sliderContent').replaceWith(
-        //       '<div id="sliderContent" class="ui-corner-all">\
-        //     <div class="viewer ui-corner-all">\
-        //         <div class="content-conveyor ui-helper-clearfix">\
-        //             <div class="item">\
-        //                 <h2>' +
-        //         (assess ? 'Assessment' : 'Start') +
-        //         '</h2>\
-        //                 <img src="' +
-        //         (assess
-        //           ? 'images/assess/' + id + '_' + currentS + '.png'
-        //           : 'images/Mosaic.png') +
-        //         '" alt="picture" width="140px" height="140px"/>\
-        //                 <dl class="details ui-helper-clearfix">\
-        //                     <dt>' +
-        //         (assess
-        //           ? 'This is the Input Image. Perform Operations to get the above result.'
-        //           : 'Select a portion of the Mosaic on the Right and Transform...') +
-        //         '</dt>\
-        //                 </dl>\
-        //             </div>\
-        //         </div>\
-        //     </div>\
-        //     <div id="slider"></div>\
-        // </div>'
-        //     )
+         
           })
 
-          $('button4', '#Layer-2').click(function () {
-            $('.paraSlider').slider('option', 'value', '0')
-            $('dims', '#imgInfo').html('__ x __')
+          // $('button4', '#Layer-2').click(function () {
+          //   $('.paraSlider').slider('option', 'value', '0')
+          //   $('dims', '#imgInfo').html('__ x __')
 
-            // Check the condition for 'exp' and 'assess' using getQueryVariable
-            if (
-              getQueryVariable('exp') !== 'piping' &&
-              getQueryVariable('assess') === null
-            ) {
-              set_state(0)
-            } else {
-              set_state(1)
-            }
+          //   // Check the condition for 'exp' and 'assess' using getQueryVariable
+          //   if (
+          //     getQueryVariable('exp') !== 'piping' &&
+          //     getQueryVariable('assess') === null
+          //   ) {
+          //     set_state(0)
+          //   } else {
+          //     set_state(1)
+          //   }
 
-            $('img', $('#Layer-5')).attr('src', 'images/Layer-5.jpg')
+          //   $('img', $('#Layer-5')).attr('src', 'images/Layer-5.jpg')
 
-            // Check the condition for 'exp' again
-            if (getQueryVariable('exp') !== 'piping') {
-              const assessSrc =
-                getQueryVariable('assess') !== null
-                  ? `images/temp/${sessionStorage.getItem(
-                      'id'
-                    )}_${sessionStorage.getItem('currentS')}_result.png`
-                  : 'images/Layer-4.jpg'
+          //   // Check the condition for 'exp' again
+          //   if (getQueryVariable('exp') !== 'piping') {
+          //     const assessSrc =
+          //       getQueryVariable('assess') !== null
+          //         ? `images/temp/${sessionStorage.getItem(
+          //             'id'
+          //           )}_${sessionStorage.getItem('currentS')}_result.png`
+          //         : 'images/Layer-4.jpg'
 
-              $('img', $('#Layer-4')).attr('src', assessSrc)
-            }
+          //     $('img', $('#Layer-4')).attr('src', assessSrc)
+          //   }
 
-            // Replace #sliderContent dynamically
-            const sliderContentHtml = `
-              <div id="sliderContent" class="ui-corner-all">
-                <div class="viewer ui-corner-all">
-                  <div class="content-conveyor ui-helper-clearfix">
-                    <div class="item">
-                      <h2>${
-                        getQueryVariable('assess') !== null
-                          ? 'Assessment'
-                          : 'Start'
-                      }</h2>
-                      <img src="${
-                        getQueryVariable('assess') !== null
-                          ? `images/temp/${sessionStorage.getItem(
-                              'id'
-                            )}_${sessionStorage.getItem('currentS')}.png`
-                          : 'images/Mosaic.png'
-                      }" alt="picture" width="140px" height="140px"/>
-                      <dl class="details ui-helper-clearfix">
-                        <dt>${
-                          getQueryVariable('assess') !== null
-                            ? 'This is the Input Image. Perform Operations to get the above result.'
-                            : 'Select a portion of the Mosaic on the Right and Transform...'
-                        }</dt>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-                <div id="slider"></div>
-              </div>`
+          //   // Replace #sliderContent dynamically
+          //   const sliderContentHtml = `
+          //     <div id="sliderContent" class="ui-corner-all">
+          //       <div class="viewer ui-corner-all">
+          //         <div class="content-conveyor ui-helper-clearfix">
+          //           <div class="item">
+          //             <h2>${
+          //               getQueryVariable('assess') !== null
+          //                 ? 'Assessment'
+          //                 : 'Start'
+          //             }</h2>
+          //             <img src="${
+          //               getQueryVariable('assess') !== null
+          //                 ? `images/temp/${sessionStorage.getItem(
+          //                     'id'
+          //                   )}_${sessionStorage.getItem('currentS')}.png`
+          //                 : 'images/Mosaic.png'
+          //             }" alt="picture" width="140px" height="140px"/>
+          //             <dl class="details ui-helper-clearfix">
+          //               <dt>${
+          //                 getQueryVariable('assess') !== null
+          //                   ? 'This is the Input Image. Perform Operations to get the above result.'
+          //                   : 'Select a portion of the Mosaic on the Right and Transform...'
+          //               }</dt>
+          //             </dl>
+          //           </div>
+          //         </div>
+          //       </div>
+          //       <div id="slider"></div>
+          //     </div>`
 
-            $('#sliderContent').replaceWith(sliderContentHtml)
+          //   $('#sliderContent').replaceWith(sliderContentHtml)
 
-            resetPos()
-          })
+          //   resetPos()
+          // })
 
           $('button2', '#Layer-2').click(function () {
             doTransform()
@@ -738,7 +740,8 @@ at http://jquery.com
             }
           })
           single1 = '1'
-          $('#Mosaic').imgAreaSelect({
+          $('#Mosaic').imgAreaSelect
+          ({
             handles: true,
             movable: true,
             persistent: true,
@@ -752,7 +755,6 @@ at http://jquery.com
             imageWidth: 900,
           })
           toggleMosaic()
-
           $('button7', '#Layer-2').button()
           $('button7', '#Layer-2').click(function () {
             if (jstate > 1) {
@@ -808,6 +810,11 @@ at http://jquery.com
           }
 
           $('#layer4Image').attr('src', imgSrc)
+        })
+
+        $('button7', '#Layer-2').button()
+        $('button7', '#Layer-2').click(function () {
+          window.location.href = 'piping.html?exp=piping'
         })
       }
 
@@ -906,16 +913,17 @@ at http://jquery.com
       </div>
 
 	<div id="zoom">
-	<button3>View Full Size Image</button3>
+	<!-- <button3>View Full Size Image</button3> -->
 	</div>
       <!-- This is 'Parameters_jpg' -->
       <div id="Layer-2">
         <h2 style="text-align: center">Affine transformation</h2>
         <div id="nextBox"></div>
 
-        <button1 style="display: none">Select Image</button1>
+        <!-- <button1 style="display: none">Select Image</button1> -->
         <button4>Reset</button4>
         <button2>Run</button2>
+        <button7>Return to Piping</button7>
         <br /><br />
         <div id="radio">
           <input
@@ -1000,7 +1008,7 @@ at http://jquery.com
 
                   <script type="text/javascript">
                     $(function () {
-                      // Replace PHP logic with JavaScript variable
+                        // Replace PHP logic with JavaScript variable
                       function getQueryParam(param) {
                         const urlParams = new URLSearchParams(
                           window.location.search

@@ -99,9 +99,6 @@
       var croppedImage = null
       var processedImage = null
 
-      const params = new URLSearchParams(window.location.search)
-      croppedImage = params.get('imageData')
-
       function blinker(i) {
         if (buttId != 'cancel' && i > 0) {
           $($(buttId), '#Layer-2').toggleClass('ui-state-hover')
@@ -112,7 +109,6 @@
       function set_state(state) {
         switch (state) {
           case 0:
-            console.log('idhar')
             $('#nextBox').html(
               "Start the Experiment by clicking on 'Select Image' and selecting an Input Image from the Mosaic"
             )
@@ -128,54 +124,13 @@
             break
           case 2:
             $('#nextBox').html(
-              'Observe the result and try different operations .'
+              "Click on 'Reset' to start again at the beginning."
             )
+            buttId = 'button3'
+            blinker(8)
             break
         }
         jstate = state
-      }
-
-      function initialize() {
-        // Get the image data from sessionStorage
-        const imageData = sessionStorage.getItem('croppedImage')
-
-        if (imageData) {
-          // Convert base64 string back to image and create OpenCV mat
-          const img = new Image()
-          img.onload = function () {
-            const canvas = document.createElement('canvas')
-            canvas.width = img.width
-            canvas.height = img.height
-            const ctx = canvas.getContext('2d')
-            ctx.drawImage(img, 0, 0)
-
-            // Create OpenCV mat from image data
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-            croppedImage = new cv.Mat(imgData.height, imgData.width, cv.CV_8UC4)
-            croppedImage.data.set(imgData.data)
-
-            // Display the image
-            const layer4Image = document.getElementById('layer4Image')
-            layer4Image.src = imageData
-
-            // Optional: Clear the data from sessionStorage if you don't need it anymore
-            sessionStorage.removeItem('croppedImage')
-          }
-          img.src = imageData
-        }
-      }
-
-      // Function to retrieve query parameters from URL
-      function getQueryVariable(variable) {
-        var query = window.location.search.substring(1)
-        var vars = query.split('&')
-        for (var i = 0; i < vars.length; i++) {
-          var pair = vars[i].split('=')
-          if (decodeURIComponent(pair[0]) == variable) {
-            return decodeURIComponent(pair[1])
-          }
-        }
-        return null
       }
 
       function toggleMosaic() {
@@ -312,8 +267,8 @@
           }
 
           // Convert to grayscale if necessary
-          cv.cvtColor(croppedImage, croppedImage, cv.COLOR_RGBA2GRAY)
-
+          // var croppedcopy=croppedImage
+          // cv.cvtColor(croppedcopy, croppedcopy, cv.COLOR_RGBA2GRAY)
           processedImage = performOperations(croppedImage, args, size)
           let content = `<div class="item">
           <h2>Initial Image</h2>
@@ -373,6 +328,10 @@
           const unsharp = applyUnsharpMask(image, size, 1.5)
           return unsharp
         }
+        // Cleanup memory
+        // ;[straightAvg, triangular, gaussian, median, unsharp].forEach((mat) =>
+        //   mat.delete()
+        // )
       }
 
       // 1a. Straight Average Filter
@@ -422,7 +381,7 @@
         }
       }
 
-      var assess, id, state, currentS
+      var exp, assess, id, state, currentS
 
       var session = {
         start: function () {
@@ -432,6 +391,19 @@
           state = 0
           currentS = 1
         },
+      }
+
+      // Function to retrieve query parameters from URL
+      function getQueryVariable(variable) {
+        var query = window.location.search.substring(1)
+        var vars = query.split('&')
+        for (var i = 0; i < vars.length; i++) {
+          var pair = vars[i].split('=')
+          if (decodeURIComponent(pair[0]) == variable) {
+            return decodeURIComponent(pair[1])
+          }
+        }
+        return null
       }
 
       function loadImage(url) {
@@ -454,14 +426,42 @@
         })
       }
 
+      function initialize() {
+        // Get the image data from sessionStorage
+        const imageData = sessionStorage.getItem('croppedImage')
+
+        if (imageData) {
+          // Convert base64 string back to image and create OpenCV mat
+          const img = new Image()
+          img.onload = function () {
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(img, 0, 0)
+
+            // Create OpenCV mat from image data
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+            croppedImage = new cv.Mat(imgData.height, imgData.width, cv.CV_8UC4)
+            croppedImage.data.set(imgData.data)
+
+            // Display the image
+            const layer4Image = document.getElementById('layer4Image')
+            layer4Image.src = imageData
+
+            // Optional: Clear the data from sessionStorage if you don't need it anymore
+            sessionStorage.removeItem('croppedImage')
+          }
+          img.src = imageData
+        }
+      }
+
       function onOpenCvReady() {
         // console.log("OpenCV.js is ready.", cv.getBuildInformation);
 
         $(document).ready(function () {
           session.start()
           initialize()
-          // console.log("herereerere")
-          // console.log(exp)
           // if (exp === 'piping') {
           set_state(1)
           // } else if (assess) {
@@ -490,52 +490,60 @@
               $(this).show()
             }
           })
-          $('button4', '#Layer-2').button()
-          
-          $('button4', '#Layer-2').click(function () {
-            if (!assess) {
-              set_state(0)
-            } else {
-              set_state(1)
-            }
 
-            $('dims', '#imgInfo').html('____ x ____ ')
+          // $('button1', '#Layer-2').button()
+          // $('button1', '#Layer-2').click(function () {
+          //   toggleMosaic()
+          // })
+
+          $('button2', '#Layer-2').button()
+          // $('#radio').buttonset()
+          // $('#radio').button('refresh')
+
+          $('button4', '#Layer-2').button()
+          $('button4', '#Layer-2').click(function () {
+            // if (!assess) {
+            //   set_state(0)
+            // } else {
+            //   set_state(1)
+            // }
+
+            // $('dims', '#imgInfo').html('____ x ____ ')
 
             $('img', $('#Layer-5')).attr('src', 'images/Layer-5.jpg')
-            $('img', $('#Layer-4')).attr(
-              'src',
-              assess
-                ? 'images/assess/' + id + '_' + currentS + '.png'
-                : 'images/Layer-4.jpg'
+            // $('img', $('#Layer-4')).attr(
+            //   'src',
+            //   assess
+            //     ? 'images/assess/' + id + '_' + currentS + '.png'
+            //     : 'images/Layer-4.jpg'
+            // )
+
+            $('#sliderContent').replaceWith(
+              '<div id="sliderContent" class="ui-corner-all">\
+              <div class="viewer ui-corner-all">\
+                  <div class="content-conveyor ui-helper-clearfix">\
+                      <div class="item">\
+                          <h2>' +
+                (assess ? 'Assessment' : 'Start') +
+                '</h2>\
+                          <img src="' +
+                (assess
+                  ? 'images/assess/' + id + '_' + currentS + '.png'
+                  : 'images/Mosaic.png') +
+                '" alt="picture" width="140px" height="140px"/>\
+                          <dl class="details ui-helper-clearfix">\
+                              <dt>' +
+                (assess
+                  ? 'This is the Input Image. Perform Operations to get the above result.'
+                  : 'Select a portion of the Mosaic on the Right and Transform...') +
+                '</dt>\
+                          </dl>\
+                      </div>\
+                  </div>\
+              </div>\
+              <div id="slider"></div>\
+          </div>'
             )
-
-          //   $('#sliderContent').replaceWith(
-          //     '<div id="sliderContent" class="ui-corner-all">\
-          //     <div class="viewer ui-corner-all">\
-          //         <div class="content-conveyor ui-helper-clearfix">\
-          //             <div class="item">\
-          //                 <h2>' +
-          //       (assess ? 'Assessment' : 'Start') +
-          //       '</h2>\
-          //                 <img src="' +
-          //       (assess
-          //         ? 'images/assess/' + id + '_' + currentS + '.png'
-          //         : 'images/Mosaic.png') +
-          //       '" alt="picture" width="140px" height="140px"/>\
-          //                 <dl class="details ui-helper-clearfix">\
-          //                     <dt>' +
-          //       (assess
-          //         ? 'This is the Input Image. Perform Operations to get the above result.'
-          //         : 'Select a portion of the Mosaic on the Right and Transform...') +
-          //       '</dt>\
-          //                 </dl>\
-          //             </div>\
-          //         </div>\
-          //     </div>\
-          //     <div id="slider"></div>\
-          // </div>'
-          //   )
-
           })
 
           $('button2', '#Layer-2').click(function () {
@@ -555,7 +563,6 @@
             imageHeight: 900,
             imageWidth: 900,
           })
-          toggleMosaic()
           // Parse the query string from the URL
           const urlParams = new URLSearchParams(window.location.search)
           const typeParam = urlParams.get('type')
@@ -579,6 +586,40 @@
             })
           }
 
+          toggleMosaic()
+          
+          $('button7', '#Layer-2').button()
+          $('button7', '#Layer-2').click(function () {
+            if (jstate > 1) {
+              var answer = confirm('Retain Changes?')
+              if (answer) {
+                // Simulating the functionality of write.php in JavaScript
+                let itemContent = $('.item:last').html()
+                let item = '<div class="item">' + itemContent + '</div>'
+
+                // Mimicking the PHP preg_replace functionality
+                item = item.replace(/140/, '281')
+                item = item.replace(/\\"/g, '"')
+
+                // Simulating writing to a file by appending the processed item to sessionStorage
+                let tempFileKey = `temp_${sessionStorage.getItem('id')}p`
+                let existingContent = sessionStorage.getItem(tempFileKey) || ''
+                sessionStorage.setItem(tempFileKey, existingContent + item)
+
+                // Simulating updating the session state
+                sessionStorage.setItem(
+                  'currentS',
+                  sessionStorage.getItem('state')
+                )
+
+                // Redirecting to the target page
+                window.location.href = 'piping.php?exp=piping'
+              } else {
+                // Redirecting without saving changes
+                window.location.href = 'piping.php?exp=piping'
+              }
+            }
+          })  
           // new js
           var titleText = assess ? 'Assessment' : 'Start'
           $('#itemTitle').text(titleText)
@@ -701,6 +742,8 @@
       <div id="Layer-2">
         <h2 style="text-align: center">Neighbourhood Operations</h2>
         <div id="nextBox"></div>
+
+        <!-- <button1 style="display: none">Select Image</button1> -->
         <button4>Reset</button4>
         <button2>Run</button2>
         <button7>Return to Piping</button7>

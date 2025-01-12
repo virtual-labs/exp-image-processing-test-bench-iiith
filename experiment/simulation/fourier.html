@@ -611,48 +611,48 @@ at http://jquery.com
 
           $('button4', '#Layer-2').button()
           $('button4', '#Layer-2').click(function () {
-            if (!assess) {
-              set_state(0)
-            } else {
-              set_state(1)
-            }
+            // if (!assess) {
+            //   set_state(0)
+            // } else {
+            //   set_state(1)
+            // }
 
-            $('dims', '#imgInfo').html('____ x ____ ')
+            // $('dims', '#imgInfo').html('____ x ____ ')
 
             $('img', $('#Layer-5')).attr('src', 'images/Layer-5.jpg')
-            $('img', $('#Layer-4')).attr(
-              'src',
-              assess
-                ? 'images/assess/' + id + '_' + currentS + '.png'
-                : 'images/Layer-4.jpg'
-            )
+            // $('img', $('#Layer-4')).attr(
+            //   'src',
+            //   assess
+            //     ? 'images/assess/' + id + '_' + currentS + '.png'
+            //     : 'images/Layer-4.jpg'
+            // )
 
-        //     $('#sliderContent').replaceWith(
-        //       '<div id="sliderContent" class="ui-corner-all">\
-        //     <div class="viewer ui-corner-all">\
-        //         <div class="content-conveyor ui-helper-clearfix">\
-        //             <div class="item">\
-        //                 <h2>' +
-        //         (assess ? 'Assessment' : 'Start') +
-        //         '</h2>\
-        //                 <img src="' +
-        //         (assess
-        //           ? 'images/assess/' + id + '_' + currentS + '.png'
-        //           : 'images/Mosaic.png') +
-        //         '" alt="picture" width="140px" height="140px"/>\
-        //                 <dl class="details ui-helper-clearfix">\
-        //                     <dt>' +
-        //         (assess
-        //           ? 'This is the Input Image. Perform Operations to get the above result.'
-        //           : 'Select a portion of the Mosaic on the Right and Transform...') +
-        //         '</dt>\
-        //                 </dl>\
-        //             </div>\
-        //         </div>\
-        //     </div>\
-        //     <div id="slider"></div>\
-        // </div>'
-        //     )
+            $('#sliderContent').replaceWith(
+              '<div id="sliderContent" class="ui-corner-all">\
+            <div class="viewer ui-corner-all">\
+                <div class="content-conveyor ui-helper-clearfix">\
+                    <div class="item">\
+                        <h2>' +
+                (assess ? 'Assessment' : 'Start') +
+                '</h2>\
+                        <img src="' +
+                (assess
+                  ? 'images/assess/' + id + '_' + currentS + '.png'
+                  : 'images/Mosaic.png') +
+                '" alt="picture" width="140px" height="140px"/>\
+                        <dl class="details ui-helper-clearfix">\
+                            <dt>' +
+                (assess
+                  ? 'This is the Input Image. Perform Operations to get the above result.'
+                  : 'Select a portion of the Mosaic on the Right and Transform...') +
+                '</dt>\
+                        </dl>\
+                    </div>\
+                </div>\
+            </div>\
+            <div id="slider"></div>\
+        </div>'
+            )
           })
 
           $('button2', '#Layer-2').click(function () {
@@ -673,7 +673,38 @@ at http://jquery.com
             imageWidth: 900,
           })
           toggleMosaic()
+ $('button7', '#Layer-2').button()
+          $('button7', '#Layer-2').click(function () {
+            if (jstate > 1) {
+              var answer = confirm('Retain Changes?')
+              if (answer) {
+                // Simulating the functionality of write.php in JavaScript
+                let itemContent = $('.item:last').html()
+                let item = '<div class="item">' + itemContent + '</div>'
 
+                // Mimicking the PHP preg_replace functionality
+                item = item.replace(/140/, '281')
+                item = item.replace(/\\"/g, '"')
+
+                // Simulating writing to a file by appending the processed item to sessionStorage
+                let tempFileKey = `temp_${sessionStorage.getItem('id')}p`
+                let existingContent = sessionStorage.getItem(tempFileKey) || ''
+                sessionStorage.setItem(tempFileKey, existingContent + item)
+
+                // Simulating updating the session state
+                sessionStorage.setItem(
+                  'currentS',
+                  sessionStorage.getItem('state')
+                )
+
+                // Redirecting to the target page
+                window.location.href = 'piping.php?exp=piping'
+              } else {
+                // Redirecting without saving changes
+                window.location.href = 'piping.php?exp=piping'
+              }
+            }
+          })  
           // new js
           var titleText = assess ? 'Assessment' : 'Start'
           $('#itemTitle').text(titleText)
@@ -697,27 +728,28 @@ at http://jquery.com
 
           $('#layer4Image').attr('src', imgSrc)
 
-          $('button7', '#Layer-2').click(function () {
-            if (jstate > 1) {
-              var answer = confirm('Retain Changes?')
-              if (answer) {
-                var aurl = 'item=' + $('.item:last').html()
+          // $('button7', '#Layer-2').button()
+          // $('button7', '#Layer-2').click(function () {
+          //   if (jstate > 1) {
+          //     var answer = confirm('Retain Changes?')
+          //     if (answer) {
+          //       var aurl = 'item=' + $('.item:last').html()
 
-                $.ajax({
-                  url: 'write.php',
-                  type: 'POST',
-                  data: aurl,
-                  async: false,
-                  dataType: 'html',
-                  success: function (data) {
-                    window.location.href = 'piping.php?exp=piping'
-                  },
-                })
-              } else {
-                window.location.href = 'piping.php?exp=piping'
-              }
-            }
-          })
+          //       $.ajax({
+          //         url: 'write.php',
+          //         type: 'POST',
+          //         data: aurl,
+          //         async: false,
+          //         dataType: 'html',
+          //         success: function (data) {
+          //           window.location.href = 'piping.php?exp=piping'
+          //         },
+          //       })
+          //     } else {
+          //       window.location.href = 'piping.php?exp=piping'
+          //     }
+          //   }
+          // })
 
           // Check if `exp` is "piping"
           if (exp === 'piping') {
@@ -745,6 +777,11 @@ at http://jquery.com
               }
             })
           }
+
+          $('button7', '#Layer-2').button()
+          $('button7', '#Layer-2').click(function () {
+            window.location.href = 'piping.html?exp=piping'
+          })
         })
       }
 
@@ -875,9 +912,11 @@ at http://jquery.com
         <h2 style="text-align: center">Fourier Transform</h2>
         <div id="nextBox"></div>
 
-        <button1 style="display: none">Select Image</button1>
+        <!-- <button1 style="display: none">Select Image</button1> -->
         <button4>Reset</button4>
         <button2>Run</button2>
+        <button7>Return to Piping</button7>
+
         <br /><br />
 
         <div id="choice">
