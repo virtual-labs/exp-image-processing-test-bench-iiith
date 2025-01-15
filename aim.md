@@ -1,0 +1,1 @@
+- To understand and develop solutions by utilizing a cascade of image processing modules, enabling step-by-step problem-solving through modular design.
