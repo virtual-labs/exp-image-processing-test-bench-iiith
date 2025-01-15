@@ -393,6 +393,11 @@ at http://jquery.com
         b1_param,
         beta1_param,
         beta2_param
+
+          a_param = 50
+          b_param = 200
+          a1_param = 100
+          b1_param = 150
       var session = {
         start: function () {
           exp = 'point'
@@ -604,18 +609,32 @@ at http://jquery.com
             // );
 
             $('#sliderContent').replaceWith(
-              '<div id="sliderContent" class="ui-corner-all"><div class="viewer ui-corner-all"><div class="content-conveyor ui-helper-clearfix"><div class="item"><h2>' +
+              '<div id="sliderContent" class="ui-corner-all">\
+            <div class="viewer ui-corner-all">\
+                <div class="content-conveyor ui-helper-clearfix">\
+                    <div class="item">\
+                        <h2>' +
                 (assess ? 'Assessment' : 'Start') +
-                '</h2><img src="images/assess/' +
-                id +
-                '_' +
-                currentS +
-                '.png" alt="picture" width="140px" height="140px"/><dl class="details ui-helper-clearfix"><dt>' +
+                '</h2>\
+                        <img src="' +
+                (assess
+                  ? 'images/assess/' + id + '_' + currentS + '.png'
+                  : 'images/Mosaic.png') +
+                '" alt="picture" width="140px" height="140px"/>\
+                        <dl class="details ui-helper-clearfix">\
+                            <dt>' +
                 (assess
                   ? 'This is the Input Image. Perform Operations to get the above result.'
-                  : 'Select a portion of the Mosaic on the Right and Transform... ') +
-                '</dt></dl></div></div></div><div id="slider"></div></div>'
+                  : 'Select a portion of the Mosaic on the Right and Transform...') +
+                '</dt>\
+                        </dl>\
+                    </div>\
+                </div>\
+            </div>\
+            <div id="slider"></div>\
+        </div>'
             )
+         
           })
 
           $('button2', '#Layer-2').click(function () {

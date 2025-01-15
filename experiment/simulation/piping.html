@@ -298,21 +298,21 @@
           $('button4', '#Layer-2').button()
           
           $('button4', '#Layer-2').click(function () {
-            if (!assess) {
-              set_state(0)
-            } else {
-              set_state(1)
-            }
+            // if (!assess) {
+            //   set_state(0)
+            // } else {
+            //   set_state(1)
+            // }
 
-            $('dims', '#imgInfo').html('____ x ____ ')
+            // $('dims', '#imgInfo').html('____ x ____ ')
 
             $('img', $('#Layer-5')).attr('src', 'images/Layer-5.jpg')
-            $('img', $('#Layer-4')).attr(
-              'src',
-              assess
-                ? 'images/assess/' + id + '_' + currentS + '.png'
-                : 'images/Layer-4.jpg'
-            )
+            // $('img', $('#Layer-4')).attr(
+            //   'src',
+            //   assess
+            //     ? 'images/assess/' + id + '_' + currentS + '.png'
+            //     : 'images/Layer-4.jpg'
+            // )
 
             $('#sliderContent').replaceWith(
               '<div id="sliderContent" class="ui-corner-all">\
