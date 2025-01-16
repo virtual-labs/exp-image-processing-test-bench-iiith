@@ -1,13 +1,31 @@
-In general, a good strategy to solve a given problem is using a 'divide and conquer' approach. Here the problem is broken down into sub-problems and solved. In this experiment, you are provided with an environment which will allow you to build a solution to a problem by stringing together the solution to several sub-problems. Thus, the system you build is a cascade of different modules.  
+In general, a good strategy to solve a given problem is the 'divide and conquer' approach. This involves breaking the problem into smaller sub-problems, solving each one, and combining the solutions.
 
-This test bench is meant to help you experiment and learn how algorithms are built.  
+In this experiment, you are provided with an environment to build a solution to a problem by combining solutions to several sub-problems. The system you build will function as a cascade of different modules, each solving a part of the problem.
 
-**Part1:** For a start, take your select an image from the mosaic and try applying different operations on it in a serial fashion.  
+The goal of this test bench is to help you experiment with and understand how algorithms are constructed.
 
-**Example:** Apply contrast stretching first, save the image and use that as input image for the next steps which could be filtering (neighbourhood processing) followed by segmentation by thresholding.  
+**Part 1: Sequential Image Processing**
 
-To use the output image of a processing step as input image for the next step, click on the button "Return to piping". This will prompt you with "Retain changes?" Click "OK".  
+1. **Start with a mosaic image:**
+- Select an image from the provided mosaic.
+- Apply different operations on the image in a serial fashion.
+2. **Example Workflow:**
+- First, apply **contrast stretching** to enhance the image.
+- Save the resulting image and use it as input for the next operation, such as **filtering** (neighborhood processing).
+- Finally, perform **segmentation** using thresholding.
+3. **Using Piping Functionality:**
+- To use the output image from one step as the input for the next, click the button labeled **"Return to piping".**
+- When prompted with **"Retain changes?"**, click **OK** to proceed.
+4. **Experiment with Order of Operations:**
+- For complex workflows, analyze how changing the sequence of steps impacts the final result.
 
-If you have a long sequence of steps first understand the effect of swapping the order of steps on the processed result.  
+**Part 2: Design and Implement Your Algorithm**
+1. **Define a Specific Task:**
+- Identify a specific image processing problem you’d like to solve.
+2. **Design an Algorithm:**
+- Outline the steps required to solve your task on paper.
+3. **Implement Using the Test Bench:**
+- Use the test bench environment to implement your algorithm.
+- Test and refine the steps as needed to achieve the desired outcome.
 
-**Part 2:** Now try defining a specific task for yourself and solve it by designing an algorithm for the same on paper and implementing it using the test bench. Some sample problems are given in the assessment section.  
+**Tip:** Refer to the **Assessment Section** for sample problems to practice and explore.
