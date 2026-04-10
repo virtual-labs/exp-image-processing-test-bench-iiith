@@ -1,0 +1,915 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script class="gtm">
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-W59SWTR");
+    </script>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <!-- This file was originally generated at http://psd2cssonline.com on September 16, 2010, 10:04 am -->
+    <!-- psd2css Online version 1.85 -->
+
+    <!-- <title>Virtual Lab in Image Processing</title> -->
+
+    <!-- Some META tags to help with Search Engine Optimization.  Please
+note however that META tags are NOT a magic bullet to get your web page
+to the top of search engine rankings.  They are just part of that effort.  You
+can get more information by googling SEO or visiting the psd2css Online forums. -->
+    <meta name="description" content="Put the description of this page here" />
+    <meta
+      name="keywords"
+      content="Put keywords for this page here separated by commas"
+    />
+    <meta
+      name="generator"
+      content="psd2css Online - Dynamic Web Pages from your Photoshop Design in seconds"
+    />
+
+    <!-- The CSS Reset from Eric Meyers -->
+    <!-- <link rel="stylesheet" type="text/css" href="cssreset.css" media="screen" /> -->
+
+    <!-- The Primary External CSS style sheet. -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="css/psd2css.css"
+      media="screen"
+    />
+
+    <!-- We use the jquery javascript library for DOM manipulation and
+some javascript tricks.  We serve the script from Google because its
+faster than most ISPs.  Get more information and documentation
+at http://jquery.com
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+-->
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <!-- All the javascript generated for your design is in this file -->
+    <script type="text/javascript" src="js/psd2css.js"></script>
+
+    <!-- For Jquery UI-->
+    <script
+      type="text/javascript"
+      src="js/jquery-ui-1.8.4.custom.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="css/dark-hive/jquery-ui-1.8.4.custom.css"
+    />
+
+    <!-- For Slider - http://carpe.ambiprospect.com/slider/-->
+    <link type="text/css" rel="StyleSheet" href="css/carpe-slider.css" />
+    <script type="text/javascript" src="js/carpe-slider.js"></script>
+
+    <!--http://www.cssmenumaker.com/builder/menu_info.php?menu=057-->
+    <link type="text/css" rel="StyleSheet" href="menu/menu_style.css" />
+
+    <!--for ImgSelect - http://odyniec.net/projects/imgareaselect/-->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="css/imgareaselect-default.css"
+    />
+    <script type="text/javascript" src="js/jquery.imgareaselect.js"></script>
+
+    <!--for Flot -->
+    <script type="text/javascript" src="js/jquery.flot.js"></script>
+
+    <!--for COntent Slider - Jquery Slider/-->
+    <link rel="stylesheet" type="text/css" href="css/jquery-slider.css" />
+
+    <!-- opencv.js  -->
+    <script
+      async
+      src="https://docs.opencv.org/4.10.0/opencv.js"
+      type="text/javascript"
+    ></script>
+
+    <script type="text/javascript">
+      var inputMosaic = null;
+      var croppedImage = null;
+      var processedImage = null;
+
+      function blinker(i) {
+        if (buttId != "cancel" && i > 0) {
+          $($(buttId), "#Layer-2").toggleClass("ui-state-hover");
+          setTimeout("blinker(" + (i - 1) + ")", 500);
+        }
+      }
+
+      function set_state(state) {
+        switch (state) {
+          case 0:
+            $("#nextBox").html(
+              "Start the Experiment by clicking on 'Select Image' and selecting an Input Image from the Mosaic"
+            );
+            buttId = "button1";
+            blinker(10);
+            break;
+          case 1:
+            if (assess) {
+              loadImage("images/assess/arith1_1.png").then((cImage) => {
+                croppedImage = cImage;
+              });
+            }
+            $("#nextBox").html(
+              "Select the secondary image, select appropriate parameters and click on 'Run'."
+            );
+            buttId = "button2";
+            blinker(10);
+            break;
+          case 2:
+            $("#nextBox").html(
+              "Observe the result and try different operations with different secondary Images."
+            );
+            break;
+        }
+        jstate = state;
+      }
+
+      function toggleMosaic() {
+        var ias = $("#Mosaic").imgAreaSelect({ instance: true });
+        if ($("#Mosaic").is(":visible")) {
+          ias.setOptions({ hide: true });
+          $("#Mosaic").hide("slow");
+        } else {
+          $("#Mosaic").show("slow", function () {
+            ias.setOptions({ show: true });
+            ias.update();
+          });
+        }
+      }
+
+      function set_crop() {
+        set_state(1);
+
+        var ias = $("#Mosaic").imgAreaSelect({ instance: true });
+        var sel = ias.getSelection();
+
+        loadImage("images/Mosaic.png").then((inputMat) => {
+          inputMosaic = inputMat;
+
+          cropImage(
+            inputMat,
+            "layer4Image",
+            sel.x1,
+            sel.y1,
+            sel.width,
+            sel.height
+          );
+        });
+      }
+
+      function cropImage(inputMat, output_img, x, y, w, h) {
+        let src = inputMat;
+        let rect = new cv.Rect(x, y, w, h);
+        let dst = new cv.Mat(w, h, cv.CV_8UC3);
+        dst = src.roi(rect);
+        croppedImage = dst.clone();
+        let canvas = document.createElement("canvas");
+        cv.imshow(canvas, dst);
+        let dataUrl = canvas.toDataURL();
+        let croppedImageElement = document.getElementById(output_img);
+        croppedImageElement.src = dataUrl;
+        src.delete();
+        dst.delete();
+      }
+
+      function doTransform() {
+        if (jstate == 0) {
+          alert("First click on Mosaic and select the Input Image.");
+          return;
+        }
+
+        var args_opt = null;
+        var args_fitting = null;
+        var args_image = null;
+
+        var checkBoxes = $("input[name=Operatn]");
+
+        $.each(checkBoxes, function () {
+          if ($(this).attr("checked")) {
+            args_opt = $(this).attr("value");
+          }
+        });
+
+        checkBoxes = $("input[name=fitting]");
+
+        $.each(checkBoxes, function () {
+          if ($(this).attr("checked")) {
+            args_fitting = $(this).attr("value");
+          }
+        });
+
+        checkBoxes = $("input[name=inpImage]");
+
+        $.each(checkBoxes, function () {
+          if ($(this).attr("checked")) {
+            args_image = "images/" + $(this).attr("value");
+          }
+        });
+
+        if (!$("#Mosaic").is(":visible")) {
+          set_state(2);
+          $("#slider").remove();
+          loadImage(args_image).then((secondaryImg) => {
+            var primayImg = croppedImage;
+            processImages(primayImg, secondaryImg, args_opt, args_fitting);
+
+            let canvas1 = document.createElement("canvas");
+            cv.imshow(canvas1, primayImg);
+            document.getElementById("primaryImage").src = canvas1.toDataURL();
+
+            let canvas2 = document.createElement("canvas");
+            cv.imshow(canvas2, secondaryImg);
+            document.getElementById("secondaryImage").src = canvas2.toDataURL();
+
+            let canvas3 = document.createElement("canvas");
+            cv.imshow(canvas3, processedImage);
+            document.getElementById("processedImage").src = canvas3.toDataURL();
+            document.getElementById("layer5outputImage").src =
+              canvas3.toDataURL();
+
+            var myImage = new Image();
+            myImage.name = $("img", $("#Layer-5")).attr("name");
+            myImage.src = $("img", $("#Layer-5")).attr("src");
+            myImage.onload = function () {
+              $("dims", "#imgInfo").html(this.height + " x " + this.width);
+            };
+          });
+        }
+      }
+
+      function imADD(img1, img2, map_fn) {
+        let final_img = new cv.Mat();
+        let temp1 = new cv.Mat(),
+          temp2 = new cv.Mat();
+
+        img1.convertTo(temp1, cv.CV_32F);
+        img2.convertTo(temp2, cv.CV_32F);
+        cv.add(temp1, temp2, final_img);
+
+        if (map_fn === 1) {
+          let scalarMat = new cv.Mat(
+            final_img.rows,
+            final_img.cols,
+            final_img.type(),
+            new cv.Scalar(255)
+          );
+          cv.min(final_img, scalarMat, final_img);
+          scalarMat.delete();
+        } else if (map_fn === 2) {
+          cv.normalize(final_img, final_img, 0, 255, cv.NORM_MINMAX);
+        }
+
+        final_img.convertTo(final_img, cv.CV_8U);
+        temp1.delete();
+        temp2.delete();
+        return final_img;
+      }
+
+      function imSUB(img1, img2, map_fn) {
+        let final_img = new cv.Mat();
+        let temp1 = new cv.Mat(),
+          temp2 = new cv.Mat();
+
+        img1.convertTo(temp1, cv.CV_32F);
+        img2.convertTo(temp2, cv.CV_32F);
+        cv.subtract(temp1, temp2, final_img);
+
+        if (map_fn === 1) {
+          let scalarMat = new cv.Mat(
+            final_img.rows,
+            final_img.cols,
+            final_img.type(),
+            new cv.Scalar(0)
+          );
+          cv.max(final_img, scalarMat, final_img);
+          scalarMat.delete();
+        } else if (map_fn === 2) {
+          cv.normalize(final_img, final_img, 0, 255, cv.NORM_MINMAX);
+        }
+
+        final_img.convertTo(final_img, cv.CV_8U);
+        temp1.delete();
+        temp2.delete();
+        return final_img;
+      }
+
+      function imDIFF(img1, img2, map_fn) {
+        let final_img = new cv.Mat();
+        let temp1 = new cv.Mat(),
+          temp2 = new cv.Mat();
+
+        img1.convertTo(temp1, cv.CV_32F);
+        img2.convertTo(temp2, cv.CV_32F);
+        cv.absdiff(temp1, temp2, final_img);
+
+        if (map_fn === 2) {
+          cv.normalize(final_img, final_img, 0, 255, cv.NORM_MINMAX);
+        }
+
+        final_img.convertTo(final_img, cv.CV_8U);
+        temp1.delete();
+        temp2.delete();
+        return final_img;
+      }
+
+      function imMULTIPLY(img1, img2, map_fn) {
+        let final_img = new cv.Mat();
+        let temp1 = new cv.Mat(),
+          temp2 = new cv.Mat();
+
+        img1.convertTo(temp1, cv.CV_32F);
+        img2.convertTo(temp2, cv.CV_32F);
+        cv.multiply(temp1, temp2, final_img);
+
+        if (map_fn === 1) {
+          let scalarMat = new cv.Mat(
+            final_img.rows,
+            final_img.cols,
+            final_img.type(),
+            new cv.Scalar(255)
+          );
+          cv.min(final_img, scalarMat, final_img);
+          scalarMat.delete();
+        } else if (map_fn === 2) {
+          cv.normalize(final_img, final_img, 0, 255, cv.NORM_MINMAX);
+        }
+
+        final_img.convertTo(final_img, cv.CV_8U);
+        temp1.delete();
+        temp2.delete();
+        return final_img;
+      }
+
+      function imDIVIDE(img1, img2, map_fn) {
+        let final_img = new cv.Mat();
+        let temp1 = new cv.Mat(),
+          temp2 = new cv.Mat();
+
+        img1.convertTo(temp1, cv.CV_32F);
+        img2.convertTo(temp2, cv.CV_32F);
+        cv.divide(temp1, temp2, final_img);
+
+        if (map_fn === 1) {
+          let scalarMat = new cv.Mat(
+            final_img.rows,
+            final_img.cols,
+            final_img.type(),
+            new cv.Scalar(255)
+          );
+          cv.min(final_img, scalarMat, final_img);
+          scalarMat.delete();
+        } else if (map_fn === 2) {
+          cv.normalize(final_img, final_img, 0, 255, cv.NORM_MINMAX);
+        }
+
+        final_img.convertTo(final_img, cv.CV_8U);
+        temp1.delete();
+        temp2.delete();
+        return final_img;
+      }
+
+      async function processImages(primaryImg, secondaryImg, opt, fitting) {
+        var state = parseInt(state);
+        let resultImage = null;
+        let prim = new cv.Mat();
+        let sec = new cv.Mat();
+        cv.cvtColor(primaryImg, prim, cv.COLOR_RGBA2GRAY);
+        cv.cvtColor(secondaryImg, sec, cv.COLOR_RGBA2GRAY);
+        switch (parseInt(opt)) {
+          case 1:
+            resultImage = imADD(prim, sec, parseInt(fitting));
+            break;
+          case 2:
+            resultImage = imSUB(prim, sec, parseInt(fitting));
+            break;
+          case 3:
+            resultImage = imDIFF(prim, sec, parseInt(fitting));
+            break;
+          case 4:
+            resultImage = imMULTIPLY(prim, sec, parseInt(fitting));
+            break;
+          case 5:
+            resultImage = imDIVIDE(prim, sec, parseInt(fitting));
+            break;
+          default:
+            console.error("Invalid operation");
+            return;
+        }
+
+        processedImage = resultImage.clone();
+
+        let opern = [
+          "",
+          "Addition and ",
+          "Subtraction and ",
+          "Difference and ",
+          "Multiplication and ",
+          "Division and ",
+        ][opt];
+        let map_fn = ["", "Clipping", "Auto-Scaling"][fitting];
+
+        let content = `<div class="item">
+        <h2>Primary Image</h2>
+        <img id="primaryImage" alt="picture" width="140px" height="140px"/>
+      </div>
+      <div class="item">
+        <h2>Secondary Image</h2>
+        <img id="secondaryImage" alt="picture" width="140px" height="140px"/>
+      </div>
+      <div class="item">
+        <h2>Processed Image</h2>
+        <img id="processedImage" alt="picture" width="140px" height="140px"/>
+        <dl class="details ui-helper-clearfix"><dt>${opern}${map_fn}</dt></dl>
+      </div><br><br>`;
+
+        $("#sliderContent").html(content);
+      }
+
+      function confirmTo(url) {
+        var response = confirm("You will lose Session Data: Continue?");
+        if (response) {
+          window.location.href = url;
+        }
+      }
+
+      var exp, assess, id, state, currentS;
+
+      var session = {
+        start: function () {
+          exp = "arith";
+          assess = getQueryVariable("assess");
+          id = getQueryVariable("assess");
+          state = 0;
+          currentS = 1;
+        },
+      };
+
+      // Function to retrieve query parameters from URL
+      function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+          var pair = vars[i].split("=");
+          if (decodeURIComponent(pair[0]) == variable) {
+            return decodeURIComponent(pair[1]);
+          }
+        }
+        return null;
+      }
+
+      function loadImage(url) {
+        return new Promise((resolve, reject) => {
+          let img = new Image();
+          img.crossOrigin = "Anonymous";
+          img.src = url;
+          img.onload = () => {
+            let canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            let ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            let imgData = ctx.getImageData(0, 0, img.width, img.height);
+            let mat = new cv.Mat(imgData.height, imgData.width, cv.CV_8UC4);
+            mat.data.set(imgData.data);
+            resolve(mat);
+          };
+          img.onerror = (err) => reject(err);
+        });
+      }
+
+
+      function initialize() {
+        // Get the image data from sessionStorage
+        const imageData = sessionStorage.getItem('croppedImage')
+
+        if (imageData) {
+          // Convert base64 string back to image and create OpenCV mat
+          const img = new Image()
+          img.onload = function () {
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(img, 0, 0)
+
+            // Create OpenCV mat from image data
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+            croppedImage = new cv.Mat(imgData.height, imgData.width, cv.CV_8UC4)
+            croppedImage.data.set(imgData.data)
+
+            // Display the image
+            const layer4Image = document.getElementById('layer4Image')
+            layer4Image.src = imageData
+
+            // Optional: Clear the data from sessionStorage if you don't need it anymore
+            sessionStorage.removeItem('croppedImage')
+          }
+          img.src = imageData
+        }
+      }
+ 
+
+      function onOpenCvReady() {
+        // console.log("OpenCV.js is ready.", cv.getBuildInformation);
+
+        $(document).ready(function () {
+          session.start();
+          initialize()
+
+
+        //   if (exp === "piping") {
+            set_state(1);
+        //   } else if (assess) {
+            set_state(1);
+        //   } else {
+        //     set_state(0);
+        //   }
+
+          $(".imageFull").hide();
+          $("#popUp").hide();
+          $("#radio").buttonset();
+          $("#radio").button("refresh");
+
+          $("button1").each(function () {
+            if (!assess) {
+              $(this).show();
+            }
+          });
+
+          $("button1", "#Layer-2").button();
+          $("button1", "#Layer-2").click(function () {
+            toggleMosaic();
+          });
+
+          $("button2", "#Layer-2").button();
+          $("#radio").buttonset();
+          $("#radio").button("refresh");
+
+          $("button4", "#Layer-2").button();
+          $("button4", "#Layer-2").click(function () {
+            // if (!assess) {
+            //   set_state(0);
+            // } else {
+            //   set_state(1);
+            // }
+
+            // $("dims", "#imgInfo").html("____ x ____ ");
+
+            $("img", $("#Layer-5")).attr("src", "images/Layer-5.jpg");
+            // $("img", $("#Layer-4")).attr(
+            //   "src",
+            //   assess
+            //     ? "images/assess/" + id + "_" + currentS + ".png"
+            //     : "images/Layer-4.jpg"
+            // );
+
+            $("#sliderContent").replaceWith(
+              '<div id="sliderContent" class="ui-corner-all">\
+            <div class="viewer ui-corner-all">\
+                <div class="content-conveyor ui-helper-clearfix">\
+                    <div class="item">\
+                        <h2>' +
+                (assess ? "Assessment" : "Start") +
+                '</h2>\
+                        <img src="' +
+                (assess
+                  ? "images/assess/" + id + "_" + currentS + ".png"
+                  : "images/Mosaic.png") +
+                '" alt="picture" width="140px" height="140px"/>\
+                        <dl class="details ui-helper-clearfix">\
+                            <dt>' +
+                (assess
+                  ? "This is the Input Image. Perform Operations to get the above result."
+                  : "Select a portion of the Mosaic on the Right and Transform...") +
+                '</dt>\
+                        </dl>\
+                    </div>\
+                </div>\
+            </div>\
+            <div id="slider"></div>\
+        </div>'
+            );
+          });
+
+          $("button2", "#Layer-2").click(function () {
+            doTransform();
+          });
+
+          $("#Mosaic").imgAreaSelect({
+            handles: true,
+            movable: true,
+            persistent: true,
+            resizable: false,
+            x1: 300,
+            y1: 300,
+            x2: 600,
+            y2: 600,
+            hide: false,
+            imageHeight: 900,
+            imageWidth: 900,
+          });
+          toggleMosaic();
+
+          $('button7', '#Layer-2').button()
+          $('button7', '#Layer-2').click(function () {
+            if (jstate > 1) {
+              var answer = confirm('Retain Changes?')
+              if (answer) {
+                // Simulating the functionality of write.php in JavaScript
+                let itemContent = $('.item:last').html()
+                let item = '<div class="item">' + itemContent + '</div>'
+
+                // Mimicking the PHP preg_replace functionality
+                item = item.replace(/140/, '281')
+                item = item.replace(/\\"/g, '"')
+
+                // Simulating writing to a file by appending the processed item to sessionStorage
+                let tempFileKey = `temp_${sessionStorage.getItem('id')}p`
+                let existingContent = sessionStorage.getItem(tempFileKey) || ''
+                sessionStorage.setItem(tempFileKey, existingContent + item)
+
+                // Simulating updating the session state
+                sessionStorage.setItem(
+                  'currentS',
+                  sessionStorage.getItem('state')
+                )
+
+                // Redirecting to the target page
+                window.location.href = 'piping.php?exp=piping'
+              } else {
+                // Redirecting without saving changes
+                window.location.href = 'piping.php?exp=piping'
+              }
+            }
+          })  
+          // new js
+          var titleText = assess ? "Assessment" : "Start";
+          $("#itemTitle").text(titleText);
+
+          var imgSrc = assess
+            ? "images/assess/" + id + "_" + currentS + ".png"
+            : "images/Mosaic.png";
+          $("#itemImage").attr("src", imgSrc);
+
+          var descriptionText = assess
+            ? "This is the Input Image. Perform Operations to get the above result."
+            : "Select a portion of the Mosaic on the Right and Transform...";
+          $("#itemDescription").text(descriptionText);
+
+          var imgSrc = "";
+          if (assess) {
+            imgSrc = "images/assess/" + id + "_" + currentS + ".png";
+          } else {
+            imgSrc = "images/Layer-4.jpg";
+          }
+
+          $("#layer4Image").attr("src", imgSrc);
+
+          $('button7', '#Layer-2').button()
+          $('button7', '#Layer-2').click(function () {
+            window.location.href = 'piping.html?exp=piping'
+          })
+        });
+      }
+
+      Module = {
+        onRuntimeInitialized: onOpenCvReady,
+      };
+    </script>
+  </head>
+
+  <body>
+    <!-- This is 'Backgound_bkgnd_center_jpg' -->
+    <div id="Layer-1" class="Backgound_bkgnd_center_jpg">
+      <!-- This is 'Mosaic_jpg' -->
+      <div id="Mosaic" class="Mosaic_jpg">
+        <img
+          id="Mosaic-img"
+          src="images/Mosaic.png"
+          width="513"
+          height="513"
+          alt="Mosaic"
+        />
+      </div>
+
+      <!-- This is 'Thumbnails_jpg' -->
+      <div id="Layer-7" class="Thumbnails_jpg">
+        <div id="sliderContent" class="ui-corner-all">
+          <div class="viewer ui-corner-all">
+            <div class="content-conveyor ui-helper-clearfix">
+              <div class="item">
+                <h2 id="itemTitle"></h2>
+                <img
+                  id="itemImage"
+                  src=""
+                  alt="picture"
+                  width="140px"
+                  height="140px"
+                />
+                <dl class="details ui-helper-clearfix">
+                  <dt id="itemDescription"></dt>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div id="slider"></div>
+        </div>
+      </div>
+
+      <!-- This Is 'outputLayer_jpg' -->
+      <div id="Layer-5" class="outputLayer_jpg">
+        <img
+          src="images/Layer-5.jpg"
+          alt="outputLayer"
+          id="layer5outputImage"
+          width="281px"
+          height="281px"
+        />
+      </div>
+
+      <!-- This is 'InputLayer_jpg' -->
+      <div id="Layer-4" class="InputLayer_jpg">
+        <img
+          id="layer4Image"
+          src=""
+          width="281"
+          height="281"
+          alt="InputLayer"
+        />
+      </div>
+
+      <!-- This is 'TopBar_jpg' -->
+      <div id="Layer-3" class="TopBar_jpg">
+        <!-- <img src="images/Layer-3.jpg" width="894" height="96" alt="TopBar" /> -->
+        <!-- This is 'IIIT' -->
+        <!-- <div id="Layer-6" class="IIIT"  >
+        <img src="images/iiit.png" width="100" height="70" alt="IIIT" class="pngimg" />
+  </div> -->
+
+        <div id="topMenu">
+          <!-- <h1 style="text-align: center;">Virtual Lab for IMAGE PROCESSING</h1>
+<div class="home">
+<a onclick="confirmTo('index.html')">home</a>
+</div> -->
+          <div class="menu">
+            <!-- <ul>
+<li><a href="objective.php?exp=arith" target="_self" >Objective</a>
+</li>
+<li><a href="intro.php?exp=arith" target="_self" >Introduction</a>
+</li>
+<li><a href="theory.php?exp=arith" target="_self" >Theory</a>
+</li>
+<li><a href="procedure.php?exp=arith" target="_self" >Procedure</a>
+</li>
+<li><sel><a href="arith.php" target="_self" >Experiment</a>
+</sel></li>
+<li><a href="#" target="_self" >Assessment</a>
+        <ul>
+          <li><a href="quiz.php?exp=arith">Quiz</a></li>
+          <li><a href="assign.php?exp=arith">Assignment</a></li>
+         </ul>
+</li> -->
+            <!--
+<li><a href="references.php?exp=arith" target="_self" >References</a>
+</li>
+-->
+            <!-- <li><a href="summary.php" target="_blank" >Summary</a>
+</li>
+</ul> -->
+          </div>
+        </div>
+      </div>
+
+      <div id="imgInfo">
+        <table>
+          <tr>
+            <th width="290">Input size</th>
+            <th>Output size</th>
+          </tr>
+          <tr>
+            <td>300 x 300</td>
+            <td>
+              <dims> ____ x ____ </dims>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- This is 'Parameters_jpg' -->
+      <div id="Layer-2">
+        <h2 style="text-align: center">Image Arithmetic</h2>
+        <div id="nextBox"></div>
+
+        <!-- <button1 style="display: none">Select Image</button1> -->
+        <button4>Reset</button4>
+        <button2>Run</button2>
+        <button7>Return to Piping</button7>
+
+        <br /><br />
+
+        <div class="Parameters">
+          <table>
+            <tr valign="top">
+              <td>
+                <h3 style="margin-left: -5px">Select Operation</h3>
+                <form name="Operation">
+                  <input
+                    type="radio"
+                    name="Operatn"
+                    value="1"
+                    checked
+                  />Addition<br />
+                  <input
+                    type="radio"
+                    name="Operatn"
+                    value="2"
+                  />Subtraction<br />
+                  <input
+                    type="radio"
+                    name="Operatn"
+                    value="3"
+                  />Difference<br />
+                  <input
+                    type="radio"
+                    name="Operatn"
+                    value="4"
+                  />Multiplication<br />
+                  <input type="radio" name="Operatn" value="5" />Division<br />
+                </form>
+              </td>
+              <td>
+                <form name="technique">
+                  <h3 style="margin-left: 5px">Select Fitting</h3>
+
+                  <input
+                    type="radio"
+                    name="fitting"
+                    value="1"
+                    checked
+                  />Clipping<br />
+                  <input
+                    type="radio"
+                    name="fitting"
+                    value="2"
+                  />Auto-Scaling<br />
+                </form>
+              </td>
+            </tr>
+          </table>
+          <h3 style="margin: 5px">Select Secondary Image</h3>
+
+          <div id="radio">
+            <input
+              type="radio"
+              id="dully"
+              name="inpImage"
+              value="add2.png"
+              onclick="$('img','#placeholder').attr('src','images/add2.png');"
+              checked="checked"
+            /><label for="dully">Dull</label>
+            <input
+              type="radio"
+              id="brighty"
+              name="inpImage"
+              value="add1.png"
+              onclick="$('img','#placeholder').attr('src','images/add1.png');"
+            />
+            <label for="brighty">Bright</label>
+            <input
+              type="radio"
+              id="grady"
+              name="inpImage"
+              value="add3.png"
+              onclick="$('img','#placeholder').attr('src','images/add3.png');"
+            />
+            <label for="grady">Gradient</label>
+          </div>
+        </div>
+        <div
+          id="placeholder"
+          style="
+            margin-left: 30px;
+            width: 220px;
+            padding: 5px;
+            border: solid grey 1px;
+            height: 220px;
+          "
+        >
+          <img src="images/add2.png" height="220px" width="220px" />
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
