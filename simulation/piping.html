@@ -1,0 +1,2201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Processing Test Bench</title>
+    <link rel="icon" href="data:," />
+    <style>
+      :root {
+        --bg: #f3f5f8;
+        --panel: #ffffff;
+        --border: #d4d9e0;
+        --accent: #1f6feb;
+        --muted: #5d6470;
+        --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        background: var(--bg);
+        color: #1f2937;
+      }
+
+      .app {
+        max-width: 1200px;
+        margin: 28px auto;
+        padding: 20px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 16px 20px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: #f8fafc;
+        color: #111827;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 1.3fr 0.8fr 0.8fr;
+        gap: 18px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        border-radius: 12px;
+        padding: 14px;
+        min-height: 260px;
+      }
+
+      .panel h3 {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        margin: 0 0 12px;
+        font-size: 1.1rem;
+      }
+
+      .dims {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--muted);
+      }
+
+      .mosaic-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #293541;
+        overflow: hidden;
+        touch-action: none;
+      }
+
+      #Mosaic {
+        position: relative;
+      }
+
+      #Mosaic-img {
+        position: relative;
+        z-index: 1;
+        display: block;
+        max-width: 100%;
+        max-height: 420px;
+        border-radius: 8px;
+        user-select: none;
+        -webkit-user-drag: none;
+        touch-action: none;
+      }
+
+      .selection-overlay {
+        position: absolute;
+        border: 2px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.18);
+        pointer-events: none;
+        display: none;
+        z-index: 20;
+      }
+
+      .image-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 240px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #f8fafc, #eef2f7);
+        overflow: hidden;
+      }
+
+      .image-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: inherit;
+      }
+
+      .controls {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 20px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 16px 18px;
+      }
+
+      .group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .group h3 {
+        margin: 0 0 6px;
+      }
+
+      .group label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+      }
+
+      .inline-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+      }
+
+      fieldset {
+        margin: 0;
+        padding: 10px 12px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+      }
+
+      legend {
+        padding: 0 6px;
+        font-weight: 600;
+      }
+
+      .slider-row {
+        display: grid;
+        grid-template-columns: 9.5rem 1fr 4.5rem;
+        align-items: center;
+        gap: 10px;
+        margin-top: 6px;
+        color: var(--muted);
+      }
+
+      .slider-row input[type="range"] {
+        width: 100%;
+      }
+
+      .slider-row input[type="number"] {
+        width: 100%;
+        padding: 4px 6px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font: inherit;
+      }
+
+      .hint {
+        margin: 6px 0 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .panel h3 select {
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 2px 6px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+
+      .option-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .sub-options {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 16px;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .select-row select {
+        padding: 4px 8px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font: inherit;
+        max-width: 100%;
+      }
+
+      .equation {
+        margin: 4px 0 0;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        font-size: 0.9rem;
+        overflow-wrap: anywhere;
+      }
+
+      .edit-banner {
+        margin: 0;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412;
+      }
+
+      .edit-banner button {
+        margin-left: 8px;
+        padding: 4px 10px;
+      }
+
+      .howto {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .image-box {
+        position: relative;
+      }
+
+      #layer4Image.seed-mode {
+        cursor: crosshair;
+      }
+
+      .seed-marker {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        margin: -9px 0 0 -9px;
+        border: 2px solid #ea580c;
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+        pointer-events: none;
+      }
+
+      .pipeline-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 0.9rem;
+      }
+
+      .pipeline-actions button,
+      .button-link {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+      }
+
+      .button-link {
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .button-link.disabled {
+        pointer-events: none;
+        opacity: 0.45;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+
+      .pipeline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .pipeline li {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 170px;
+        padding: 8px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+      }
+
+      .pipeline li.editing {
+        border-color: #ea580c;
+        box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.25);
+      }
+
+      .pipeline li.empty {
+        width: auto;
+        border-style: dashed;
+        color: var(--muted);
+      }
+
+      .pipeline img {
+        width: 100%;
+        height: 140px;
+        object-fit: contain;
+        border-radius: 6px;
+        background: #eef2f7;
+      }
+
+      .pipeline-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .pipeline-text strong {
+        color: #1f2937;
+      }
+
+      .pipeline-buttons {
+        display: flex;
+        gap: 4px;
+      }
+
+      .pipeline-buttons button {
+        flex: 1;
+        padding: 4px 0;
+        font-size: 0.8rem;
+      }
+
+      .summary {
+        margin-top: 18px;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 18px;
+      }
+
+      .summary-grid figure {
+        margin: 0;
+      }
+
+      .summary-grid img {
+        display: block;
+        width: 100%;
+        max-height: 420px;
+        object-fit: contain;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #eef2f7;
+      }
+
+      .summary-grid figcaption {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .summary-grid h4 {
+        margin: 0 0 6px;
+      }
+
+      .summary-steps,
+      .summary-checks {
+        margin: 0 0 14px;
+        padding-left: 22px;
+        line-height: 1.5;
+      }
+
+      .steps {
+        margin-top: 18px;
+      }
+
+      .steps-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .steps-grid figure {
+        margin: 0;
+        width: 150px;
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .steps-grid img {
+        display: block;
+        width: 150px;
+        height: 150px;
+        object-fit: contain;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #eef2f7;
+      }
+
+      .status {
+        margin-top: 16px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .app {
+          margin: 0 auto;
+          padding: 16px;
+        }
+
+        .topbar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .workspace,
+        .controls {
+          grid-template-columns: 1fr;
+        }
+
+        .slider-row {
+          grid-template-columns: 1fr 4.5rem;
+        }
+
+        .slider-row > span {
+          grid-column: 1 / -1;
+        }
+
+        .pipeline li {
+          width: calc(50% - 6px);
+        }
+
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <div class="topbar">
+        <div class="toolbar">
+          <button id="button1" type="button">Select Image</button>
+          <button id="button4" type="button">Reset</button>
+          <button id="button2" type="button">Preview Step</button>
+          <button id="addStep" type="button" class="primary">
+            Add to Pipeline
+          </button>
+        </div>
+        <div id="status" class="status">OpenCV is being initialized…</div>
+      </div>
+
+      <div class="workspace">
+        <div id="Mosaic" class="panel">
+          <h3>
+            Mosaic
+            <select id="mosaicChoice" aria-label="Mosaic image">
+              <option value="Mosaic.png" selected>Standard</option>
+              <option value="Mosaicsegment.png">Segmentation</option>
+              <option value="Mosaicmorph.png">Morphology</option>
+              <option value="Mosaiccol.jpg">Colour</option>
+            </select>
+          </h3>
+          <div class="mosaic-wrap">
+            <img
+              id="Mosaic-img"
+              src="images/Mosaic.png"
+              alt="Mosaic"
+              draggable="false"
+            />
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>
+            <span id="inputTitle">Step Input</span>
+            <span id="inputDims" class="dims">— × —</span>
+          </h3>
+          <div class="image-box">
+            <img id="layer4Image" src="images/Layer-4.jpg" data-placeholder="images/Layer-4.jpg" alt="Step input" />
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>
+            Step Output <span id="outputDims" class="dims">— × —</span>
+          </h3>
+          <div class="image-box">
+            <img id="layer5outputImage" src="images/Layer-5.jpg" data-placeholder="images/Layer-5.jpg" alt="Step output" />
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="group">
+          <h3>Module</h3>
+          <label class="select-row"
+            >Processing module
+            <select id="moduleChoice">
+              <option value="colour">Colour → single channel</option>
+              <option value="point" selected>Point operation</option>
+              <option value="arith">Arithmetic / combine</option>
+              <option value="affine">Affine transformation</option>
+              <option value="histo">Histogram equalization</option>
+              <option value="neigh">Neighbourhood filter</option>
+              <option value="fourier">Fourier spectrum</option>
+              <option value="morph">Morphological operation</option>
+              <option value="segment">Segmentation</option>
+            </select>
+          </label>
+          <p id="editBanner" class="edit-banner" hidden></p>
+
+          <!-- Colour -->
+          <fieldset data-module="colour" hidden>
+            <legend>Colour → single channel</legend>
+            <p class="hint">
+              Converts a colour image to one gray channel. All other modules
+              work on gray images.
+            </p>
+            <div class="inline-options">
+              <label><input type="radio" name="clChannel" value="gray" checked /> Gray (luminance)</label>
+              <label><input type="radio" name="clChannel" value="red" /> Red</label>
+              <label><input type="radio" name="clChannel" value="green" /> Green</label>
+              <label><input type="radio" name="clChannel" value="blue" /> Blue</label>
+            </div>
+            <div class="inline-options">
+              <label><input type="radio" name="clChannel" value="hue" /> Hue</label>
+              <label><input type="radio" name="clChannel" value="saturation" /> Saturation</label>
+              <label><input type="radio" name="clChannel" value="value" /> Value (brightness)</label>
+            </div>
+            <p class="hint">Hue 0–360° is shown as 0–255 (red ≈ 0 and 255, yellow ≈ 43, green ≈ 85, blue ≈ 170).</p>
+          </fieldset>
+
+          <!-- Point operation -->
+          <fieldset data-module="point">
+            <legend>Point operation</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="pointType" value="linear" checked /> Linear</label>
+              <label><input type="radio" name="pointType" value="log" /> Log</label>
+              <label><input type="radio" name="pointType" value="clip" /> Clipping</label>
+              <label><input type="radio" name="pointType" value="window" /> Window</label>
+            </div>
+            <div class="slider-row" data-point="linear">
+              <span>Slope angle θ (°)</span>
+              <input id="ptAngle" type="range" min="-89" max="89" step="1" value="45" />
+              <input id="ptAngleValue" type="number" min="-89" max="89" step="1" value="45" aria-label="Slope angle" />
+            </div>
+            <div class="slider-row" data-point="linear">
+              <span>Offset o</span>
+              <input id="ptOffset" type="range" min="-255" max="255" step="1" value="0" />
+              <input id="ptOffsetValue" type="number" min="-255" max="255" step="1" value="0" aria-label="Offset" />
+            </div>
+            <div class="slider-row" data-point="log" hidden>
+              <span>Constant c</span>
+              <input id="ptC" type="range" min="0" max="254" step="1" value="106" />
+              <input id="ptCValue" type="number" min="0" max="254" step="1" value="106" aria-label="Log constant" />
+            </div>
+            <div class="slider-row" data-point="clip window" hidden>
+              <span>Start a</span>
+              <input id="ptA" type="range" min="0" max="255" step="1" value="50" />
+              <input id="ptAValue" type="number" min="0" max="255" step="1" value="50" aria-label="Range start" />
+            </div>
+            <div class="slider-row" data-point="clip window" hidden>
+              <span>End b</span>
+              <input id="ptB" type="range" min="0" max="255" step="1" value="200" />
+              <input id="ptBValue" type="number" min="0" max="255" step="1" value="200" aria-label="Range end" />
+            </div>
+            <div class="slider-row" data-point="clip window" hidden>
+              <span>Slope angle θ (°)</span>
+              <input id="ptRangeAngle" type="range" min="0" max="89" step="1" value="45" />
+              <input id="ptRangeAngleValue" type="number" min="0" max="89" step="1" value="45" aria-label="Range slope angle" />
+            </div>
+          </fieldset>
+
+          <!-- Arithmetic / combine -->
+          <fieldset data-module="arith" hidden>
+            <legend>Arithmetic / combine</legend>
+            <label class="select-row"
+              >Second operand
+              <select id="arOperand"></select>
+            </label>
+            <div class="option-list">
+              <label><input type="radio" name="arOp" value="add" checked /> Addition (clipped)</label>
+              <label><input type="radio" name="arOp" value="subtract" /> Subtraction (clipped)</label>
+              <label><input type="radio" name="arOp" value="difference" /> Difference |p − s|</label>
+              <label><input type="radio" name="arOp" value="multiply" /> Multiplication p·s / 255</label>
+              <label><input type="radio" name="arOp" value="mask" /> Mask: keep this input p where s is white</label>
+              <label><input type="radio" name="arOp" value="cutout" /> Cut out: keep s where this input p is white</label>
+            </div>
+          </fieldset>
+
+          <!-- Affine -->
+          <fieldset data-module="affine" hidden>
+            <legend>Affine transformation (scale → rotate → translate)</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="afDir" value="down" checked /> Downscale</label>
+              <label><input type="radio" name="afDir" value="up" /> Upscale</label>
+            </div>
+            <div class="slider-row">
+              <span>Scale exponent x (2<sup>x</sup>)</span>
+              <input id="afExp" type="range" min="0" max="2" step="1" value="0" />
+              <input id="afExpValue" type="number" min="0" max="2" step="1" value="0" aria-label="Scale exponent" />
+            </div>
+            <div class="slider-row">
+              <span>Rotation (°, anticlockwise)</span>
+              <input id="afAngle" type="range" min="0" max="360" step="1" value="0" />
+              <input id="afAngleValue" type="number" min="0" max="360" step="1" value="0" aria-label="Rotation angle" />
+            </div>
+            <div class="slider-row">
+              <span>X-translation (px)</span>
+              <input id="afTx" type="range" min="-300" max="300" step="1" value="0" />
+              <input id="afTxValue" type="number" min="-300" max="300" step="1" value="0" aria-label="X translation" />
+            </div>
+            <div class="slider-row">
+              <span>Y-translation (px)</span>
+              <input id="afTy" type="range" min="-300" max="300" step="1" value="0" />
+              <input id="afTyValue" type="number" min="-300" max="300" step="1" value="0" aria-label="Y translation" />
+            </div>
+            <div class="inline-options">
+              <label><input type="radio" name="afInterp" value="nearest" checked /> Nearest</label>
+              <label><input type="radio" name="afInterp" value="bilinear" /> Bilinear</label>
+              <label><input type="radio" name="afInterp" value="bicubic" /> Bicubic</label>
+            </div>
+          </fieldset>
+
+          <!-- Histogram -->
+          <fieldset data-module="histo" hidden>
+            <legend>Histogram equalization</legend>
+            <div class="option-list">
+              <label><input type="radio" name="heMethod" value="global" checked /> Global</label>
+              <label><input type="radio" name="heMethod" value="local" /> Local (adaptive)</label>
+            </div>
+            <div class="sub-options" data-he="local" hidden>
+              <span>Window size:</span>
+              <label><input type="radio" name="heWindow" value="50" checked /> 50 × 50</label>
+              <label><input type="radio" name="heWindow" value="100" /> 100 × 100</label>
+            </div>
+          </fieldset>
+
+          <!-- Neighbourhood -->
+          <fieldset data-module="neigh" hidden>
+            <legend>Neighbourhood filter</legend>
+            <div class="option-list">
+              <label><input type="radio" name="nbFilter" value="average" checked /> Straight average</label>
+              <label><input type="radio" name="nbFilter" value="triangular" /> Triangular average</label>
+              <label><input type="radio" name="nbFilter" value="gaussian" /> Gaussian average</label>
+              <label><input type="radio" name="nbFilter" value="median" /> Median filter</label>
+              <label><input type="radio" name="nbFilter" value="unsharp" /> Unsharp masking (α = 1.5)</label>
+            </div>
+            <div class="inline-options">
+              <label><input type="radio" name="nbSize" value="3" checked /> 3 × 3</label>
+              <label><input type="radio" name="nbSize" value="5" /> 5 × 5</label>
+              <label><input type="radio" name="nbSize" value="7" /> 7 × 7</label>
+            </div>
+          </fieldset>
+
+          <!-- Fourier -->
+          <fieldset data-module="fourier" hidden>
+            <legend>Fourier spectrum</legend>
+            <div class="option-list">
+              <label><input type="radio" name="ftView" value="logMagnitude" checked /> Log magnitude, centred</label>
+              <label><input type="radio" name="ftView" value="phase" /> Phase, centred</label>
+            </div>
+          </fieldset>
+
+          <!-- Morphology -->
+          <fieldset data-module="morph" hidden>
+            <legend>Morphological operation</legend>
+            <div class="inline-options">
+              <label><input type="radio" name="moOp" value="dilation" checked /> Dilation</label>
+              <label><input type="radio" name="moOp" value="erosion" /> Erosion</label>
+              <label><input type="radio" name="moOp" value="closing" /> Closing</label>
+              <label><input type="radio" name="moOp" value="opening" /> Opening</label>
+            </div>
+            <div class="inline-options">
+              <label><input type="radio" name="moShape" value="square" checked /> Square</label>
+              <label><input type="radio" name="moShape" value="disk" /> Disk</label>
+            </div>
+            <div class="inline-options">
+              <label><input type="radio" name="moSize" value="3" checked /> 3 × 3</label>
+              <label><input type="radio" name="moSize" value="5" /> 5 × 5</label>
+              <label><input type="radio" name="moSize" value="7" /> 7 × 7</label>
+              <label><input type="radio" name="moSize" value="11" /> 11 × 11</label>
+            </div>
+          </fieldset>
+
+          <!-- Segmentation -->
+          <fieldset data-module="segment" hidden>
+            <legend>Segmentation</legend>
+            <div class="option-list">
+              <label><input type="radio" name="sgMethod" value="single" checked /> Single threshold: S = 1 if I ≥ T</label>
+              <label><input type="radio" name="sgMethod" value="double" /> Double threshold: T1 ≤ I ≤ T2</label>
+              <label><input type="radio" name="sgMethod" value="otsu" /> Automatic threshold (Otsu)</label>
+              <label><input type="radio" name="sgMethod" value="region" /> Region growing from a seed</label>
+            </div>
+            <div class="slider-row" data-sg="single">
+              <span>T</span>
+              <input id="sgT" type="range" min="0" max="255" step="1" value="128" />
+              <input id="sgTValue" type="number" min="0" max="255" step="1" value="128" aria-label="Threshold" />
+            </div>
+            <div class="slider-row" data-sg="double" hidden>
+              <span>T1 (lower)</span>
+              <input id="sgT1" type="range" min="0" max="255" step="1" value="64" />
+              <input id="sgT1Value" type="number" min="0" max="255" step="1" value="64" aria-label="Lower threshold" />
+            </div>
+            <div class="slider-row" data-sg="double" hidden>
+              <span>T2 (upper)</span>
+              <input id="sgT2" type="range" min="0" max="255" step="1" value="192" />
+              <input id="sgT2Value" type="number" min="0" max="255" step="1" value="192" aria-label="Upper threshold" />
+            </div>
+            <div data-sg="region" hidden>
+              <p id="seedText" class="hint"></p>
+              <div class="slider-row">
+                <span>Δ: |I − μ<sub>S</sub>| ≤ Δ</span>
+                <input id="sgDelta" type="range" min="0" max="100" step="1" value="20" />
+                <input id="sgDeltaValue" type="number" min="0" max="100" step="1" value="20" aria-label="Region growing tolerance" />
+              </div>
+              <div class="inline-options">
+                <label><input type="radio" name="sgConn" value="4" checked /> 4-connected</label>
+                <label><input type="radio" name="sgConn" value="8" /> 8-connected</label>
+              </div>
+            </div>
+            <label
+              ><input id="sgInvert" type="checkbox" /> Invert result (select
+              the other class)</label
+            >
+          </fieldset>
+
+          <p id="moduleSummary" class="equation"></p>
+        </div>
+
+        <div class="group">
+          <h3>How to Use</h3>
+          <ol class="howto">
+            <li>Choose a mosaic and drag over it to select the starting image.</li>
+            <li>Pick a module, set its parameters and click <b>Preview Step</b>.</li>
+            <li>Click <b>Add to Pipeline</b>: its output becomes the next step's input.</li>
+            <li>Move, edit or remove steps below; the pipeline re-runs from the start.</li>
+            <li>Use <b>Arithmetic / combine</b> to mix an earlier stage back in, e.g. cut the object out of the original with a segmentation mask.</li>
+            <li>Click <b>Finish</b> to review, evaluate and save the result. <b>Load Example</b> shows a complete worked pipeline.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="panel steps">
+        <h3>
+          Pipeline (intermediate results)
+          <span class="pipeline-actions">
+            <button id="loadExample" type="button">Load Example</button>
+            <button id="undoStep" type="button">Undo Last</button>
+            <button id="clearPipeline" type="button">Clear Steps</button>
+            <button id="copySteps" type="button">Copy Steps</button>
+            <a id="downloadFinal" class="button-link" download="test-bench-result.png">Download Result</a>
+            <button id="finishPipeline" type="button" class="primary">Finish</button>
+          </span>
+        </h3>
+        <ol id="pipelineList" class="pipeline"></ol>
+      </div>
+
+      <div id="summaryPanel" class="panel summary" hidden>
+        <h3>
+          Pipeline Summary
+          <span class="pipeline-actions">
+            <button id="backToEditing" type="button">Back to Editing</button>
+            <button id="startNew" type="button">Start a New Pipeline</button>
+          </span>
+        </h3>
+        <div class="summary-grid">
+          <figure>
+            <img id="summaryImage" alt="Final result of the pipeline" />
+            <figcaption id="summaryCaption"></figcaption>
+          </figure>
+          <div>
+            <h4>Steps used</h4>
+            <ol id="summarySteps" class="summary-steps"></ol>
+            <h4>Evaluate the result</h4>
+            <ul class="summary-checks">
+              <li>Has the required region been isolated?</li>
+              <li>Have unwanted background regions also been selected?</li>
+              <li>Have important parts of the object been lost?</li>
+              <li>Does the result contain noise or extra regions?</li>
+              <li>Would changing an earlier step improve the final result?</li>
+            </ul>
+            <p class="hint">
+              Use <b>Copy Steps</b> and <b>Download Result</b> above to record
+              your solution. <b>Back to Editing</b> keeps the pipeline;
+              <b>Start a New Pipeline</b> clears everything.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript" src="js/opencv.js"></script>
+    <script type="text/javascript">
+      const app = {
+        mosaicMat: null,
+        mosaicIsColour: false,
+        source: null,
+        steps: [],
+        preview: null,
+        editing: null,
+        seed: null,
+        seedMarker: null,
+        selection: null,
+        dragging: false,
+        startPoint: null,
+        currentPoint: null,
+      };
+
+      const mosaic = document.getElementById("Mosaic");
+      const mosaicWrap = document.querySelector(".mosaic-wrap");
+      const mosaicImg = document.getElementById("Mosaic-img");
+      const inputImg = document.getElementById("layer4Image");
+      const outputImg = document.getElementById("layer5outputImage");
+      const statusEl = document.getElementById("status");
+      const selectionOverlay = document.createElement("div");
+      selectionOverlay.className = "selection-overlay";
+      mosaicWrap.appendChild(selectionOverlay);
+
+      function safeDelete(mat) {
+        if (mat && typeof mat.delete === "function" && !mat.isDeleted()) {
+          mat.delete();
+        }
+      }
+
+      function setStatus(message, isError) {
+        statusEl.textContent = message;
+        statusEl.style.background = isError ? "#fef2f2" : "#eff6ff";
+        statusEl.style.color = isError ? "#b91c1c" : "#1d4ed8";
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      /* ---------- Mosaic selection (native pointer / touch events) ---------- */
+
+      function placeSelectionOverlay(displayX, displayY, displayW, displayH) {
+        const wrapRect = mosaicWrap.getBoundingClientRect();
+        const imageRect = mosaicImg.getBoundingClientRect();
+        const offsetX = imageRect.left - wrapRect.left;
+        const offsetY = imageRect.top - wrapRect.top;
+
+        selectionOverlay.style.left = offsetX + displayX + "px";
+        selectionOverlay.style.top = offsetY + displayY + "px";
+        selectionOverlay.style.width = displayW + "px";
+        selectionOverlay.style.height = displayH + "px";
+      }
+
+      function getSelectionPoint(event) {
+        const source = event.touches?.[0] || event.changedTouches?.[0] || event;
+        return {
+          clientX: source.clientX,
+          clientY: source.clientY,
+        };
+      }
+
+      function beginSelection(event) {
+        if (app.dragging) return;
+        if (
+          event.type === "mousedown" &&
+          event.button !== 0 &&
+          event.which !== 1
+        ) {
+          return;
+        }
+        event.preventDefault();
+
+        const point = getSelectionPoint(event);
+        const rect = mosaicImg.getBoundingClientRect();
+        const localX = clamp(point.clientX - rect.left, 0, rect.width);
+        const localY = clamp(point.clientY - rect.top, 0, rect.height);
+
+        app.dragging = true;
+        app.startPoint = {
+          x: localX * (mosaicImg.naturalWidth / rect.width),
+          y: localY * (mosaicImg.naturalHeight / rect.height),
+        };
+        app.currentPoint = { ...app.startPoint };
+
+        placeSelectionOverlay(localX, localY, 0, 0);
+        selectionOverlay.style.display = "block";
+
+        setStatus("Drag across the mosaic to create a crop region.");
+      }
+
+      function moveSelection(event) {
+        if (!app.dragging || !app.startPoint) return;
+
+        event.preventDefault();
+        const point = getSelectionPoint(event);
+
+        const rect = mosaicImg.getBoundingClientRect();
+        const scaleX = mosaicImg.naturalWidth / rect.width;
+        const scaleY = mosaicImg.naturalHeight / rect.height;
+        const localX = clamp(point.clientX - rect.left, 0, rect.width);
+        const localY = clamp(point.clientY - rect.top, 0, rect.height);
+
+        const x = localX * scaleX;
+        const y = localY * scaleY;
+        app.currentPoint = { x, y };
+
+        const x1 = Math.min(app.startPoint.x, x);
+        const y1 = Math.min(app.startPoint.y, y);
+        const x2 = Math.max(app.startPoint.x, x);
+        const y2 = Math.max(app.startPoint.y, y);
+
+        placeSelectionOverlay(
+          x1 / scaleX,
+          y1 / scaleY,
+          (x2 - x1) / scaleX,
+          (y2 - y1) / scaleY,
+        );
+      }
+
+      function finalizeSelection(event) {
+        if (!app.dragging) return;
+
+        if (event) {
+          event.preventDefault();
+          moveSelection(event);
+        }
+
+        const x1 = Math.min(app.startPoint.x, app.currentPoint.x);
+        const y1 = Math.min(app.startPoint.y, app.currentPoint.y);
+        const x2 = Math.max(app.startPoint.x, app.currentPoint.x);
+        const y2 = Math.max(app.startPoint.y, app.currentPoint.y);
+
+        app.dragging = false;
+        selectionOverlay.style.display = "none";
+
+        if (x2 - x1 < 5 || y2 - y1 < 5) {
+          setStatus(
+            "Selection is too small. Drag a larger region on the mosaic.",
+            true,
+          );
+          return;
+        }
+
+        const left = clamp(Math.round(x1), 0, mosaicImg.naturalWidth - 1);
+        const top = clamp(Math.round(y1), 0, mosaicImg.naturalHeight - 1);
+        app.selection = {
+          x1: left,
+          y1: top,
+          width: clamp(Math.round(x2 - x1), 1, mosaicImg.naturalWidth - left),
+          height: clamp(Math.round(y2 - y1), 1, mosaicImg.naturalHeight - top),
+        };
+
+        cropFromSelection(app.selection);
+      }
+
+      function setupMosaicSelection() {
+        mosaicImg.addEventListener("pointerdown", (event) => {
+          beginSelection(event);
+          if (app.dragging && mosaicImg.setPointerCapture) {
+            mosaicImg.setPointerCapture(event.pointerId);
+          }
+        });
+        mosaicImg.addEventListener("pointermove", moveSelection);
+        mosaicImg.addEventListener("pointerup", finalizeSelection);
+        mosaicImg.addEventListener("pointercancel", finalizeSelection);
+        mosaicImg.addEventListener("mousedown", beginSelection);
+        mosaicImg.addEventListener("mousemove", moveSelection);
+        window.addEventListener("mouseup", finalizeSelection);
+        mosaicImg.addEventListener("touchstart", beginSelection, {
+          passive: false,
+        });
+        mosaicImg.addEventListener("touchmove", moveSelection, {
+          passive: false,
+        });
+        mosaicImg.addEventListener("touchend", finalizeSelection, {
+          passive: false,
+        });
+        mosaicImg.addEventListener("touchcancel", finalizeSelection, {
+          passive: false,
+        });
+      }
+
+      /* ---------- Image I/O ---------- */
+
+      function loadImage(url) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, img.width, img.height);
+            const mat = new cv.Mat(
+              imageData.height,
+              imageData.width,
+              cv.CV_8UC4,
+            );
+            mat.data.set(imageData.data);
+            resolve(mat);
+          };
+          img.onerror = (err) => reject(err);
+          img.src = url;
+        });
+      }
+
+      function matToDataUrl(mat) {
+        const canvas = document.createElement("canvas");
+        cv.imshow(canvas, mat);
+        return canvas.toDataURL();
+      }
+
+      function cropFromSelection(selection) {
+        if (!app.mosaicMat) {
+          setStatus("The mosaic image has not loaded yet.", true);
+          return;
+        }
+
+        const rect = new cv.Rect(
+          selection.x1,
+          selection.y1,
+          selection.width,
+          selection.height,
+        );
+        const roi = app.mosaicMat.roi(rect);
+        const gray = new cv.Mat();
+        // The colour mosaic keeps its colours; the others are gray images.
+        if (app.mosaicIsColour) roi.copyTo(gray);
+        else cv.cvtColor(roi, gray, cv.COLOR_RGBA2GRAY);
+        roi.delete();
+
+        const previousSource = app.source;
+        app.source = gray;
+        app.editing = null;
+        app.seed = null;
+        clearPreview();
+
+        // Re-run the existing pipeline on the new image when possible.
+        let note = "";
+        if (app.steps.length) {
+          const error = rerunPipeline(stepSpecs());
+          if (error) {
+            app.steps.forEach((s) => s.output.delete());
+            app.steps = [];
+            note = " The previous pipeline could not run on it (" + error + ") and was cleared.";
+          } else {
+            note = " The existing " + app.steps.length + "-step pipeline was re-run on it.";
+          }
+        }
+        safeDelete(previousSource);
+        refreshPipeline();
+        setStatus(
+          "New image selected (" + gray.cols + " × " + gray.rows + ")." + note +
+            " Choose a module and click Preview Step.",
+        );
+      }
+
+      /* ---------- Small helpers ---------- */
+
+      function setDims(id, width, height) {
+        document.getElementById(id).textContent =
+          width && height ? width + " × " + height : "— × —";
+      }
+
+      function showMat(img, mat) {
+        img.src = mat ? matToDataUrl(mat) : img.dataset.placeholder;
+      }
+
+      function fail(message) {
+        throw new Error(message);
+      }
+
+      /* ---------- Control snapshots ---------- */
+
+      // A step stores its module's control values so that it can be re-run
+      // and loaded back into the controls for editing.
+      function moduleFieldset(module) {
+        return document.querySelector('fieldset[data-module="' + module + '"]');
+      }
+
+      function snapshotControls(module) {
+        const snap = {};
+        moduleFieldset(module)
+          .querySelectorAll("input, select")
+          .forEach((el) => {
+            if (el.type === "radio") {
+              if (el.checked) snap["r:" + el.name] = el.value;
+            } else if (el.type === "checkbox") {
+              snap["c:" + el.id] = el.checked;
+            } else if (el.type !== "range") {
+              snap["v:" + el.id] = el.value;
+            }
+          });
+        return snap;
+      }
+
+      function restoreControls(module, snap) {
+        Object.keys(snap).forEach((key) => {
+          if (!/^[rcv]:/.test(key)) return; // e.g. the region-growing seed
+          const name = key.slice(2);
+          if (key.startsWith("r:")) {
+            const radio = document.querySelector(
+              'input[name="' + name + '"][value="' + snap[key] + '"]',
+            );
+            if (radio) radio.checked = true;
+          } else if (key.startsWith("c:")) {
+            document.getElementById(name).checked = snap[key];
+          } else {
+            const el = document.getElementById(name);
+            el.value = snap[key];
+            const range = document.getElementById(name.replace(/Value$/, ""));
+            if (range && range !== el) range.value = snap[key];
+          }
+        });
+      }
+
+      const radioOf = (snap, name) => snap["r:" + name];
+      const numberOf = (snap, id) => Number(snap["v:" + id + "Value"]);
+
+      /* ---------- Modules ---------- */
+
+      // Point operation: same transfer functions as the Point Operations
+      // experiment, applied through a 256-entry look-up table.
+      function pointTransfer(p, params) {
+        const slope = Math.tan((params.angle * Math.PI) / 180);
+        if (params.type === "linear") return slope * p + params.offset;
+        if (params.type === "log") return params.c * Math.log10(1 + p);
+        if (params.type === "clip") {
+          if (p < params.a) return 0;
+          if (p > params.b) return 255;
+          return slope * p;
+        }
+        if (p < params.a || p > params.b) return 0;
+        return slope * p;
+      }
+
+      function applyLut(gray, lut) {
+        const out = new cv.Mat(gray.rows, gray.cols, cv.CV_8UC1);
+        for (let i = 0; i < gray.data.length; i++) out.data[i] = lut[gray.data[i]];
+        return out;
+      }
+
+      // Affine helpers (continuous-coordinate composition, as in the Affine
+      // Transformation experiment).
+      function multiply3(a, b) {
+        const r = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) for (let k = 0; k < 3; k++) r[i][j] += a[i][k] * b[k][j];
+        return r;
+      }
+
+      function affineMatrix(cols, rows, params) {
+        const s = params.scale;
+        const w = cols * s;
+        const h = rows * s;
+        const t = (params.angle * Math.PI) / 180;
+        const a = Math.cos(t);
+        const b = Math.sin(t);
+        const cx = w / 2;
+        const cy = h / 2;
+        let m = [[s, 0, 0], [0, s, 0], [0, 0, 1]];
+        m = multiply3([[a, b, (1 - a) * cx - b * cy], [-b, a, b * cx + (1 - a) * cy], [0, 0, 1]], m);
+        m = multiply3([[1, 0, params.tx], [0, 1, params.ty], [0, 0, 1]], m);
+        m = multiply3(multiply3([[1, 0, -0.5], [0, 1, -0.5], [0, 0, 1]], m), [[1, 0, 0.5], [0, 1, 0.5], [0, 0, 1]]);
+        return { m, width: Math.max(1, Math.round(w)), height: Math.max(1, Math.round(h)) };
+      }
+
+      function linearKernel(filter, size) {
+        const r = (size - 1) / 2;
+        const sigma = 0.3 * ((size - 1) * 0.5 - 1) + 0.8;
+        const w = [];
+        for (let i = 0; i < size; i++) {
+          const d = Math.abs(i - r);
+          w.push(filter === "average" ? 1 : filter === "triangular" ? r + 1 - d : Math.exp(-(d * d) / (2 * sigma * sigma)));
+        }
+        const raw = w.map((x) => w.map((y) => x * y));
+        const total = raw.flat().reduce((s, v) => s + v, 0);
+        return raw.flat().map((v) => v / total);
+      }
+
+      function convolve(src, size, weights) {
+        const k = cv.matFromArray(size, size, cv.CV_32F, weights);
+        const dst = new cv.Mat();
+        cv.filter2D(src, dst, -1, k, new cv.Point(-1, -1), 0, cv.BORDER_REFLECT_101);
+        k.delete();
+        return dst;
+      }
+
+      function histogramCounts(gray) {
+        const counts = new Array(256).fill(0);
+        for (let i = 0; i < gray.data.length; i++) counts[gray.data[i]] += 1;
+        return counts;
+      }
+
+      function otsuThreshold(gray) {
+        const counts = histogramCounts(gray);
+        const total = gray.data.length;
+        let best = 1;
+        let bestWithin = Infinity;
+        for (let t = 1; t < 256; t++) {
+          let n0 = 0, s0 = 0, q0 = 0, n1 = 0, s1 = 0, q1 = 0;
+          for (let v = 0; v < 256; v++) {
+            const c = counts[v];
+            if (v < t) { n0 += c; s0 += c * v; q0 += c * v * v; } else { n1 += c; s1 += c * v; q1 += c * v * v; }
+          }
+          if (!n0 || !n1) continue;
+          const within = (n0 / total) * (q0 / n0 - (s0 / n0) ** 2) + (n1 / total) * (q1 / n1 - (s1 / n1) ** 2);
+          if (within < bestWithin - 1e-9) { bestWithin = within; best = t; }
+        }
+        return best;
+      }
+
+      function regionGrowMask(gray, seed, delta, connectivity) {
+        const W = gray.cols;
+        const H = gray.rows;
+        const d = gray.data;
+        const mask = cv.Mat.zeros(H, W, cv.CV_8UC1);
+        const queued = new Uint8Array(W * H);
+        const offsets = connectivity === 8
+          ? [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]
+          : [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        const s = seed.y * W + seed.x;
+        const queue = [s];
+        queued[s] = 1;
+        mask.data[s] = 255;
+        let sum = d[s];
+        let count = 1;
+        for (let head = 0; head < queue.length; head++) {
+          const p = queue[head];
+          const px = p % W;
+          const py = (p - px) / W;
+          for (const [dx, dy] of offsets) {
+            const x = px + dx;
+            const y = py + dy;
+            if (x < 0 || y < 0 || x >= W || y >= H) continue;
+            const q = y * W + x;
+            if (queued[q]) continue;
+            queued[q] = 1;
+            if (Math.abs(d[q] - sum / count) <= delta) {
+              mask.data[q] = 255;
+              sum += d[q];
+              count += 1;
+              queue.push(q);
+            }
+          }
+        }
+        return mask;
+      }
+
+      const isColour = (mat) => mat.channels() === 4;
+      const NEEDS_GRAY = "this step's input is a colour image; add a Colour → single channel step first";
+
+      const MODULES = {
+        colour: {
+          label: "Colour → single channel",
+          read: (s) => ({ channel: radioOf(s, "clChannel") }),
+          describe: (p) => "Colour: " + { gray: "gray (luminance)", red: "red channel", green: "green channel", blue: "blue channel", hue: "hue", saturation: "saturation", value: "value (brightness)" }[p.channel],
+          apply(src, p) {
+            if (!isColour(src)) {
+              if (p.channel === "gray") return src.clone();
+              fail("this step's input is already a gray image, so it has no " + p.channel + " channel");
+            }
+            const out = new cv.Mat(src.rows, src.cols, cv.CV_8UC1);
+            if (p.channel === "gray") {
+              cv.cvtColor(src, out, cv.COLOR_RGBA2GRAY);
+              return out;
+            }
+            const rgbIndex = { red: 0, green: 1, blue: 2 }[p.channel];
+            if (rgbIndex !== undefined) {
+              for (let i = 0; i < out.data.length; i++) out.data[i] = src.data[i * 4 + rgbIndex];
+              return out;
+            }
+            const rgb = new cv.Mat();
+            const hsv = new cv.Mat();
+            cv.cvtColor(src, rgb, cv.COLOR_RGBA2RGB);
+            cv.cvtColor(rgb, hsv, cv.COLOR_RGB2HSV);
+            const k = { hue: 0, saturation: 1, value: 2 }[p.channel];
+            for (let i = 0; i < out.data.length; i++) {
+              const v = hsv.data[i * 3 + k];
+              out.data[i] = k === 0 ? Math.round((v * 255) / 179) : v;
+            }
+            rgb.delete();
+            hsv.delete();
+            return out;
+          },
+        },
+
+        point: {
+          label: "Point operation",
+          read: (s) => ({
+            type: radioOf(s, "pointType"),
+            angle: radioOf(s, "pointType") === "linear" ? numberOf(s, "ptAngle") : numberOf(s, "ptRangeAngle"),
+            offset: numberOf(s, "ptOffset"),
+            c: numberOf(s, "ptC"),
+            a: Math.min(numberOf(s, "ptA"), numberOf(s, "ptB")),
+            b: Math.max(numberOf(s, "ptA"), numberOf(s, "ptB")),
+          }),
+          describe(p) {
+            const slope = Number(Math.tan((p.angle * Math.PI) / 180).toFixed(2));
+            if (p.type === "linear") return "Point: q = " + slope + "·p " + (p.offset < 0 ? "− " : "+ ") + Math.abs(p.offset);
+            if (p.type === "log") return "Point: q = " + p.c + "·log10(1 + p)";
+            return "Point: " + (p.type === "clip" ? "clipping" : "window") + " [" + p.a + ", " + p.b + "], slope " + slope;
+          },
+          apply(src, p) {
+            const lut = new Uint8Array(256);
+            for (let v = 0; v < 256; v++) lut[v] = clamp(Math.floor(pointTransfer(v, p) + 1e-9), 0, 255);
+            return applyLut(src, lut);
+          },
+        },
+
+        arith: {
+          label: "Arithmetic / combine",
+          read: (s) => ({ op: radioOf(s, "arOp"), operand: Number(s["v:arOperand"] || 0) }),
+          describe: (p) => {
+            const names = { add: "add", subtract: "subtract", difference: "difference with", multiply: "multiply by", mask: "mask with", cutout: "cut out" };
+            return "Arithmetic: " + names[p.op] + " " + stageName(p.operand) + (p.op === "cutout" ? " where this input is white" : "");
+          },
+          apply(src, p, ctx) {
+            if (p.operand > ctx.position) fail("this step uses " + stageName(p.operand) + ", which comes after it");
+            const operand = ctx.stage(p.operand);
+            if (isColour(src)) fail(NEEDS_GRAY);
+            if (isColour(operand) && p.op !== "cutout") {
+              fail(stageName(p.operand) + " is a colour image; only Cut out can use a colour operand");
+            }
+            if (operand.rows !== src.rows || operand.cols !== src.cols) {
+              fail(stageName(p.operand) + " is " + operand.cols + " × " + operand.rows + " but this step's input is " + src.cols + " × " + src.rows);
+            }
+            if (isColour(operand)) {
+              // Cut out in colour: keep the operand's colour where p is white.
+              const out = new cv.Mat(src.rows, src.cols, cv.CV_8UC4);
+              for (let i = 0; i < src.data.length; i++) {
+                const keep = src.data[i] >= 128;
+                for (let c = 0; c < 3; c++) out.data[i * 4 + c] = keep ? operand.data[i * 4 + c] : 0;
+                out.data[i * 4 + 3] = 255;
+              }
+              return out;
+            }
+            const out = new cv.Mat(src.rows, src.cols, cv.CV_8UC1);
+            for (let i = 0; i < src.data.length; i++) {
+              const a = src.data[i];
+              const b = operand.data[i];
+              let v;
+              if (p.op === "add") v = a + b;
+              else if (p.op === "subtract") v = a - b;
+              else if (p.op === "difference") v = Math.abs(a - b);
+              else if (p.op === "multiply") v = Math.round((a * b) / 255);
+              else if (p.op === "mask") v = b >= 128 ? a : 0;
+              else v = a >= 128 ? b : 0;
+              out.data[i] = clamp(v, 0, 255);
+            }
+            return out;
+          },
+        },
+
+        affine: {
+          label: "Affine transformation",
+          read: (s) => {
+            const x = numberOf(s, "afExp");
+            return {
+              scale: radioOf(s, "afDir") === "up" ? 2 ** x : 2 ** -x,
+              angle: numberOf(s, "afAngle"),
+              tx: numberOf(s, "afTx"),
+              ty: numberOf(s, "afTy"),
+              interp: radioOf(s, "afInterp"),
+            };
+          },
+          describe: (p) =>
+            "Affine: scale ×" + (p.scale >= 1 ? p.scale : "1/" + 1 / p.scale) + ", rotate " + p.angle + "°, translate (" + p.tx + ", " + p.ty + ")",
+          apply(src, p) {
+            const t = affineMatrix(src.cols, src.rows, p);
+            if (t.width > 2048 || t.height > 2048) fail("the scaled image would be larger than 2048 px");
+            const m = cv.matFromArray(2, 3, cv.CV_64F, [t.m[0][0], t.m[0][1], t.m[0][2], t.m[1][0], t.m[1][1], t.m[1][2]]);
+            const dst = new cv.Mat();
+            const flag = p.interp === "bilinear" ? cv.INTER_LINEAR : p.interp === "bicubic" ? cv.INTER_CUBIC : cv.INTER_NEAREST;
+            cv.warpAffine(src, dst, m, new cv.Size(t.width, t.height), flag, cv.BORDER_CONSTANT, new cv.Scalar(0));
+            m.delete();
+            return dst;
+          },
+        },
+
+        histo: {
+          label: "Histogram equalization",
+          read: (s) => ({ method: radioOf(s, "heMethod"), window: Number(radioOf(s, "heWindow")) }),
+          describe: (p) => (p.method === "local" ? "Histogram: local equalization, " + p.window + " px window" : "Histogram: global equalization"),
+          apply(src, p) {
+            if (p.method === "local") {
+              const clahe = new cv.CLAHE(2, new cv.Size(Math.ceil(src.cols / p.window), Math.ceil(src.rows / p.window)));
+              const dst = new cv.Mat();
+              clahe.apply(src, dst);
+              clahe.delete();
+              return dst;
+            }
+            const counts = histogramCounts(src);
+            const lut = new Uint8Array(256);
+            let cumulative = 0;
+            for (let k = 0; k < 256; k++) {
+              cumulative += counts[k];
+              lut[k] = Math.round((255 * cumulative) / src.data.length);
+            }
+            return applyLut(src, lut);
+          },
+        },
+
+        neigh: {
+          label: "Neighbourhood filter",
+          read: (s) => ({ filter: radioOf(s, "nbFilter"), size: Number(radioOf(s, "nbSize")) }),
+          describe: (p) => "Neighbourhood: " + { average: "straight average", triangular: "triangular average", gaussian: "Gaussian average", median: "median", unsharp: "unsharp masking" }[p.filter] + ", " + p.size + " × " + p.size,
+          apply(src, p) {
+            if (p.filter === "median") {
+              const dst = new cv.Mat();
+              cv.medianBlur(src, dst, p.size);
+              return dst;
+            }
+            if (p.filter === "unsharp") {
+              const smooth = convolve(src, p.size, linearKernel("gaussian", p.size));
+              const dst = new cv.Mat();
+              cv.addWeighted(src, 2.5, smooth, -1.5, 0, dst);
+              smooth.delete();
+              return dst;
+            }
+            return convolve(src, p.size, linearKernel(p.filter, p.size));
+          },
+        },
+
+        fourier: {
+          label: "Fourier spectrum",
+          read: (s) => ({ view: radioOf(s, "ftView") }),
+          describe: (p) => (p.view === "phase" ? "Fourier: phase spectrum (centred)" : "Fourier: log magnitude spectrum (centred)"),
+          apply(src, p) {
+            const real = new cv.Mat();
+            src.convertTo(real, cv.CV_32F);
+            const imag = cv.Mat.zeros(src.rows, src.cols, cv.CV_32F);
+            const planes = new cv.MatVector();
+            planes.push_back(real);
+            planes.push_back(imag);
+            const complex = new cv.Mat();
+            cv.merge(planes, complex);
+            cv.dft(complex, complex);
+            cv.split(complex, planes);
+            const re = planes.get(0).data32F;
+            const im = planes.get(1).data32F;
+            const R = src.rows;
+            const C = src.cols;
+            const values = new Float64Array(R * C);
+            for (let y = 0; y < R; y++) {
+              for (let x = 0; x < C; x++) {
+                const i = y * C + x;
+                const v = p.view === "phase" ? Math.atan2(im[i], re[i]) : Math.log(1 + Math.hypot(re[i], im[i]));
+                values[((y + Math.floor(R / 2)) % R) * C + ((x + Math.floor(C / 2)) % C)] = v;
+              }
+            }
+            real.delete(); imag.delete(); complex.delete(); planes.delete();
+            let min = -Math.PI;
+            let max = Math.PI;
+            if (p.view !== "phase") {
+              min = Infinity; max = -Infinity;
+              for (const v of values) { if (v < min) min = v; if (v > max) max = v; }
+            }
+            const out = new cv.Mat(R, C, cv.CV_8UC1);
+            for (let i = 0; i < values.length; i++) out.data[i] = Math.round(((values[i] - min) / (max - min || 1)) * 255);
+            return out;
+          },
+        },
+
+        morph: {
+          label: "Morphological operation",
+          read: (s) => ({ op: radioOf(s, "moOp"), shape: radioOf(s, "moShape"), size: Number(radioOf(s, "moSize")) }),
+          describe: (p) => "Morphology: " + p.op + ", " + p.size + " × " + p.size + " " + p.shape,
+          apply(src, p) {
+            const se = cv.getStructuringElement(p.shape === "disk" ? cv.MORPH_ELLIPSE : cv.MORPH_RECT, new cv.Size(p.size, p.size));
+            const run = (img, dilate) => {
+              const dst = new cv.Mat();
+              (dilate ? cv.dilate : cv.erode)(img, dst, se, new cv.Point(-1, -1), 1, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
+              return dst;
+            };
+            let out;
+            if (p.op === "dilation") out = run(src, true);
+            else if (p.op === "erosion") out = run(src, false);
+            else {
+              const first = run(src, p.op === "closing");
+              out = run(first, p.op !== "closing");
+              first.delete();
+            }
+            se.delete();
+            return out;
+          },
+        },
+
+        segment: {
+          label: "Segmentation",
+          read: (s) => ({
+            method: radioOf(s, "sgMethod"),
+            t: numberOf(s, "sgT"),
+            t1: Math.min(numberOf(s, "sgT1"), numberOf(s, "sgT2")),
+            t2: Math.max(numberOf(s, "sgT1"), numberOf(s, "sgT2")),
+            delta: numberOf(s, "sgDelta"),
+            connectivity: Number(radioOf(s, "sgConn")),
+            invert: !!s["c:sgInvert"],
+            seed: s.seed || null,
+          }),
+          describe(p) {
+            let text;
+            if (p.method === "single") text = "Segmentation: I ≥ " + p.t;
+            else if (p.method === "double") text = "Segmentation: " + p.t1 + " ≤ I ≤ " + p.t2;
+            else if (p.method === "otsu") text = "Segmentation: Otsu threshold";
+            else text = "Segmentation: region growing from (" + p.seed.x + ", " + p.seed.y + "), Δ = " + p.delta;
+            return text + (p.invert ? ", inverted" : "");
+          },
+          apply(src, p) {
+            let mask;
+            if (p.method === "region") {
+              if (!p.seed || p.seed.x >= src.cols || p.seed.y >= src.rows) fail("the region-growing seed lies outside this step's input");
+              mask = regionGrowMask(src, p.seed, p.delta, p.connectivity);
+            } else {
+              const t = p.method === "otsu" ? otsuThreshold(src) : null;
+              const test = p.method === "single" ? (v) => v >= p.t : p.method === "double" ? (v) => v >= p.t1 && v <= p.t2 : (v) => v >= t;
+              mask = new cv.Mat(src.rows, src.cols, cv.CV_8UC1);
+              for (let i = 0; i < src.data.length; i++) mask.data[i] = test(src.data[i]) ? 255 : 0;
+            }
+            if (p.invert) for (let i = 0; i < mask.data.length; i++) mask.data[i] = 255 - mask.data[i];
+            return mask;
+          },
+        },
+      };
+
+      /* ---------- Pipeline ---------- */
+
+      // Stage 0 is the selected image; stage k is the output of step k.
+      function stageName(index) {
+        return index === 0 ? "the original image (stage 0)" : "the output of step " + index;
+      }
+
+      function stageMat(index) {
+        return index === 0 ? app.source : app.steps[index - 1].output;
+      }
+
+      // Position the next Preview/Add works on: the step being edited, or the
+      // end of the pipeline.
+      function workingPosition() {
+        return app.editing === null ? app.steps.length : app.editing;
+      }
+
+      function runStep(module, snap, input, position, stage) {
+        const params = MODULES[module].read(snap);
+        if (isColour(input) && module !== "colour" && module !== "arith") fail(NEEDS_GRAY);
+        const output = MODULES[module].apply(input, params, { position, stage });
+        return { module, snap, params, description: MODULES[module].describe(params), output };
+      }
+
+      // Re-run every step from the source. On failure nothing changes and the
+      // error names the step that could not run.
+      function rerunPipeline(specs) {
+        const outputs = [];
+        const stage = (k) => (k === 0 ? app.source : outputs[k - 1].output);
+        try {
+          specs.forEach((spec, i) => {
+            try {
+              outputs.push(runStep(spec.module, spec.snap, stage(i), i, stage));
+            } catch (err) {
+              throw new Error("Step " + (i + 1) + " (" + MODULES[spec.module].label + ") could not run: " + err.message + ".");
+            }
+          });
+        } catch (err) {
+          outputs.forEach((s) => s.output.delete());
+          return err.message;
+        }
+        app.steps.forEach((s) => s.output.delete());
+        app.steps = outputs;
+        return null;
+      }
+
+      function currentModule() {
+        return document.getElementById("moduleChoice").value;
+      }
+
+      function currentSnapshot() {
+        const module = currentModule();
+        const snap = snapshotControls(module);
+        if (module === "segment") snap.seed = app.seed ? { ...app.seed } : null;
+        return snap;
+      }
+
+      function clearPreview() {
+        safeDelete(app.preview);
+        app.preview = null;
+        outputImg.src = "images/Layer-5.jpg";
+        setDims("outputDims");
+      }
+
+      function previewStep() {
+        if (!app.source) {
+          setStatus("Please select a region from the mosaic first.", true);
+          return null;
+        }
+        const position = workingPosition();
+        try {
+          const step = runStep(currentModule(), currentSnapshot(), stageMat(position), position, stageMat);
+          safeDelete(app.preview);
+          app.preview = step.output;
+          outputImg.src = matToDataUrl(step.output);
+          setDims("outputDims", step.output.cols, step.output.rows);
+          setStatus("Preview: " + step.description + ". Click " + (app.editing === null ? "Add to Pipeline" : "Update Step") + " to keep it.");
+          return step;
+        } catch (err) {
+          setStatus("This step cannot run: " + err.message + ".", true);
+          return null;
+        }
+      }
+
+      function addOrUpdateStep() {
+        if (!app.source) {
+          setStatus("Please select a region from the mosaic first.", true);
+          return;
+        }
+        const spec = { module: currentModule(), snap: currentSnapshot() };
+        if (app.editing === null) {
+          const position = app.steps.length;
+          try {
+            const step = runStep(spec.module, spec.snap, stageMat(position), position, stageMat);
+            app.steps.push(step);
+            setStatus("Step " + app.steps.length + " added: " + step.description + ". Its output is now the next step's input.");
+          } catch (err) {
+            setStatus("This step cannot run: " + err.message + ".", true);
+            return;
+          }
+        } else {
+          const index = app.editing;
+          const specs = app.steps.map((s) => ({ module: s.module, snap: s.snap }));
+          specs[index] = spec;
+          const error = rerunPipeline(specs);
+          if (error) {
+            setStatus(error + " The change was not applied.", true);
+            return;
+          }
+          app.editing = null;
+          setStatus("Step " + (index + 1) + " updated and the pipeline re-run.");
+        }
+        clearPreview();
+        refreshPipeline();
+      }
+
+      function changePipeline(specs, message) {
+        const error = rerunPipeline(specs);
+        if (error) {
+          setStatus(error + " The change was not applied.", true);
+          return false;
+        }
+        app.editing = null;
+        clearPreview();
+        refreshPipeline();
+        setStatus(message);
+        return true;
+      }
+
+      function stepSpecs() {
+        return app.steps.map((s) => ({ module: s.module, snap: s.snap }));
+      }
+
+      function moveStep(index, delta) {
+        const specs = stepSpecs();
+        const target = index + delta;
+        [specs[index], specs[target]] = [specs[target], specs[index]];
+        changePipeline(specs, "Step " + (index + 1) + " moved; the pipeline was re-run in the new order.");
+      }
+
+      function removeStep(index) {
+        const specs = stepSpecs();
+        specs.splice(index, 1);
+        changePipeline(specs, "Step " + (index + 1) + " removed; the pipeline was re-run.");
+      }
+
+      function editStep(index) {
+        const step = app.steps[index];
+        app.editing = index;
+        refreshOperandChoices();
+        document.getElementById("moduleChoice").value = step.module;
+        updateModuleView();
+        restoreControls(step.module, step.snap);
+        if (step.snap.seed) app.seed = { ...step.snap.seed };
+        updateModuleView();
+        clearPreview();
+        refreshPipeline();
+        setStatus("Editing step " + (index + 1) + ". Change its parameters, preview, then click Update Step.");
+      }
+
+      function cancelEdit() {
+        app.editing = null;
+        clearPreview();
+        refreshPipeline();
+        setStatus("Edit cancelled.");
+      }
+
+      function pipelineFigure(src, title, caption, actions) {
+        const li = document.createElement("li");
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = title;
+        const text = document.createElement("div");
+        text.className = "pipeline-text";
+        const strong = document.createElement("strong");
+        strong.textContent = title;
+        const span = document.createElement("span");
+        span.textContent = caption;
+        text.append(strong, span);
+        li.append(img, text);
+        if (actions) li.appendChild(actions);
+        return li;
+      }
+
+      function actionButton(label, aria, handler, disabled) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = label;
+        b.setAttribute("aria-label", aria);
+        b.disabled = !!disabled;
+        b.addEventListener("click", handler);
+        return b;
+      }
+
+      function refreshPipeline() {
+        const list = document.getElementById("pipelineList");
+        list.innerHTML = "";
+        if (!app.source) {
+          list.innerHTML = '<li class="empty">Select a region from the mosaic to start a pipeline.</li>';
+        } else {
+          list.appendChild(
+            pipelineFigure(matToDataUrl(app.source), "0. Original", app.source.cols + " × " + app.source.rows),
+          );
+          app.steps.forEach((step, i) => {
+            const actions = document.createElement("div");
+            actions.className = "pipeline-buttons";
+            actions.append(
+              actionButton("↑", "Move step " + (i + 1) + " earlier", () => moveStep(i, -1), i === 0),
+              actionButton("↓", "Move step " + (i + 1) + " later", () => moveStep(i, 1), i === app.steps.length - 1),
+              actionButton("Edit", "Edit step " + (i + 1), () => editStep(i)),
+              actionButton("✕", "Remove step " + (i + 1), () => removeStep(i)),
+            );
+            const li = pipelineFigure(
+              matToDataUrl(step.output),
+              i + 1 + ". " + MODULES[step.module].label,
+              step.description.replace(/^[^:]+: /, "") + " — " + step.output.cols + " × " + step.output.rows,
+              actions,
+            );
+            if (app.editing === i) li.classList.add("editing");
+            list.appendChild(li);
+          });
+        }
+
+        const position = workingPosition();
+        const input = app.source ? stageMat(position) : null;
+        showMat(inputImg, input);
+        if (input) setDims("inputDims", input.cols, input.rows);
+        else setDims("inputDims");
+        document.getElementById("inputTitle").textContent =
+          app.editing !== null ? "Input of Step " + (app.editing + 1) : position === 0 ? "Step Input (original)" : "Step Input (output of step " + position + ")";
+
+        const banner = document.getElementById("editBanner");
+        banner.hidden = app.editing === null;
+        banner.innerHTML = "";
+        if (app.editing !== null) {
+          banner.append("Editing step " + (app.editing + 1) + ". ");
+          banner.appendChild(actionButton("Cancel edit", "Cancel edit", cancelEdit));
+        }
+        document.getElementById("addStep").textContent = app.editing === null ? "Add to Pipeline" : "Update Step";
+
+        const last = app.source ? stageMat(app.steps.length) : null;
+        const link = document.getElementById("downloadFinal");
+        if (last) link.href = matToDataUrl(last);
+        else link.removeAttribute("href");
+        link.classList.toggle("disabled", !last);
+        ["undoStep", "clearPipeline", "copySteps", "finishPipeline"].forEach((id) => {
+          document.getElementById(id).disabled = !app.steps.length;
+        });
+
+        refreshOperandChoices();
+        placeSeedMarker();
+      }
+
+      function refreshOperandChoices() {
+        const select = document.getElementById("arOperand");
+        const previous = select.value;
+        select.innerHTML = "";
+        const position = workingPosition();
+        for (let k = 0; k <= position; k++) {
+          if (k > 0 && !app.steps[k - 1]) break;
+          const option = document.createElement("option");
+          option.value = String(k);
+          option.textContent = k === 0 ? "Original image (stage 0)" : "Output of step " + k;
+          select.appendChild(option);
+        }
+        if ([...select.options].some((o) => o.value === previous)) select.value = previous;
+      }
+
+      function stepsAsText() {
+        return [
+          "Image Processing Test Bench pipeline",
+          "0. Original: " + app.source.cols + " × " + app.source.rows + " region of the " + document.getElementById("mosaicChoice").selectedOptions[0].textContent + " mosaic",
+          ...app.steps.map((s, i) => i + 1 + ". " + s.description),
+        ].join("\n");
+      }
+
+      /* ---------- Module controls ---------- */
+
+      function bindSliderPair(id) {
+        const range = document.getElementById(id);
+        const number = document.getElementById(id + "Value");
+        range.addEventListener("input", () => {
+          number.value = range.value;
+          updateModuleView();
+        });
+        number.addEventListener("change", () => {
+          const value = clamp(Math.round(Number(number.value) || 0), Number(number.min), Number(number.max));
+          number.value = value;
+          range.value = value;
+          updateModuleView();
+        });
+      }
+
+      function toggleBy(attr, value) {
+        document.querySelectorAll("[" + attr + "]").forEach((el) => {
+          el.hidden = !el.getAttribute(attr).split(" ").includes(value);
+        });
+      }
+
+      function updateModuleView() {
+        const module = currentModule();
+        document.querySelectorAll("fieldset[data-module]").forEach((f) => {
+          f.hidden = f.dataset.module !== module;
+        });
+        toggleBy("data-point", document.querySelector('input[name="pointType"]:checked').value);
+        toggleBy("data-he", document.querySelector('input[name="heMethod"]:checked').value);
+        toggleBy("data-sg", document.querySelector('input[name="sgMethod"]:checked').value);
+        try {
+          const snap = currentSnapshot();
+          const params = MODULES[module].read(snap);
+          document.getElementById("moduleSummary").textContent =
+            module === "segment" && params.method === "region" && !params.seed
+              ? "Click or tap the step input image to place a seed."
+              : MODULES[module].describe(params);
+        } catch (err) {
+          document.getElementById("moduleSummary").textContent = "";
+        }
+        placeSeedMarker();
+      }
+
+      /* ---------- Region-growing seed ---------- */
+
+      function seedMode() {
+        return (
+          app.source &&
+          currentModule() === "segment" &&
+          document.querySelector('input[name="sgMethod"]:checked').value === "region"
+        );
+      }
+
+      function imageContentRect(img, cols, rows) {
+        const rect = img.getBoundingClientRect();
+        const scale = Math.min(rect.width / cols, rect.height / rows);
+        return {
+          left: rect.left + (rect.width - cols * scale) / 2,
+          top: rect.top + (rect.height - rows * scale) / 2,
+          scale,
+        };
+      }
+
+      function placeSeedMarker() {
+        const marker = app.seedMarker;
+        if (!marker) return;
+        const input = app.source ? stageMat(workingPosition()) : null;
+        const show = seedMode() && app.seed && input && app.seed.x < input.cols && app.seed.y < input.rows;
+        marker.hidden = !show;
+        inputImg.classList.toggle("seed-mode", !!seedMode());
+        document.getElementById("seedText").textContent = app.seed
+          ? "Seed: (" + app.seed.x + ", " + app.seed.y + "). Click or tap the step input image to move it."
+          : "Click or tap the step input image to place the seed.";
+        if (!show) return;
+        const c = imageContentRect(inputImg, input.cols, input.rows);
+        const box = inputImg.parentElement.getBoundingClientRect();
+        marker.style.left = c.left - box.left + (app.seed.x + 0.5) * c.scale + "px";
+        marker.style.top = c.top - box.top + (app.seed.y + 0.5) * c.scale + "px";
+      }
+
+      function setupSeedPicking() {
+        const marker = document.createElement("div");
+        marker.className = "seed-marker";
+        marker.hidden = true;
+        inputImg.parentElement.appendChild(marker);
+        app.seedMarker = marker;
+        inputImg.addEventListener("click", (event) => {
+          if (!seedMode()) return;
+          const input = stageMat(workingPosition());
+          const c = imageContentRect(inputImg, input.cols, input.rows);
+          const x = Math.floor((event.clientX - c.left) / c.scale);
+          const y = Math.floor((event.clientY - c.top) / c.scale);
+          if (x < 0 || y < 0 || x >= input.cols || y >= input.rows) return;
+          app.seed = { x, y };
+          updateModuleView();
+          setStatus("Seed placed at (" + x + ", " + y + "), intensity " + input.data[y * input.cols + x] + ". Click Preview Step.");
+        });
+        window.addEventListener("resize", placeSeedMarker);
+      }
+
+      const SLIDER_IDS = ["ptAngle", "ptOffset", "ptC", "ptA", "ptB", "ptRangeAngle", "afExp", "afAngle", "afTx", "afTy", "sgT", "sgT1", "sgT2", "sgDelta"];
+      let defaultSnapshots = null;
+
+      function setupControls() {
+        SLIDER_IDS.forEach(bindSliderPair);
+        document.querySelectorAll("fieldset[data-module] input, #moduleChoice").forEach((el) => {
+          if (el.type !== "range" && el.type !== "number") el.addEventListener("change", updateModuleView);
+        });
+        defaultSnapshots = {};
+        Object.keys(MODULES).forEach((m) => (defaultSnapshots[m] = snapshotControls(m)));
+        setupSeedPicking();
+        updateModuleView();
+      }
+
+      function resetControls() {
+        Object.keys(defaultSnapshots).forEach((m) => restoreControls(m, defaultSnapshots[m]));
+        document.getElementById("moduleChoice").value = "point";
+        updateModuleView();
+      }
+
+      /* ---------- Finish / summary ---------- */
+
+      function showSummary() {
+        if (!app.source || !app.steps.length) {
+          setStatus("Add at least one step before finishing.", true);
+          return;
+        }
+        const last = stageMat(app.steps.length);
+        document.getElementById("summaryImage").src = matToDataUrl(last);
+        document.getElementById("summaryCaption").textContent =
+          "Final result (" + last.cols + " × " + last.rows + ") after " + app.steps.length + " step" + (app.steps.length > 1 ? "s" : "");
+        const list = document.getElementById("summarySteps");
+        list.innerHTML = "";
+        const first = document.createElement("li");
+        first.textContent = "Original: " + app.source.cols + " × " + app.source.rows + " region of the " + document.getElementById("mosaicChoice").selectedOptions[0].textContent + " mosaic";
+        list.appendChild(first);
+        app.steps.forEach((step) => {
+          const li = document.createElement("li");
+          li.textContent = step.description;
+          list.appendChild(li);
+        });
+        const panel = document.getElementById("summaryPanel");
+        panel.hidden = false;
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+        setStatus("Pipeline finished. Review and evaluate the result in the summary below.");
+      }
+
+      function hideSummary() {
+        document.getElementById("summaryPanel").hidden = true;
+      }
+
+      /* ---------- Worked example ---------- */
+
+      // Taj Mahal extraction (Assessment task 5): Standard mosaic, row 3,
+      // column 2, cropped above the bright path.
+      const EXAMPLE = {
+        mosaic: "Mosaic.png",
+        region: { x1: 300, y1: 600, width: 300, height: 245 },
+        steps: [
+          { module: "segment", set: { "r:sgMethod": "region", "v:sgDeltaValue": "10", "c:sgInvert": true }, seed: { x: 5, y: 5 } },
+          { module: "arith", set: { "r:arOp": "mask", "v:arOperand": "0" } },
+          { module: "morph", set: { "r:moOp": "opening", "r:moShape": "square", "r:moSize": "5" } },
+          { module: "arith", set: { "r:arOp": "cutout", "v:arOperand": "0" } },
+        ],
+      };
+
+      function loadMosaic(file) {
+        mosaicImg.src = "images/" + file;
+        return loadImage("images/" + file).then((mat) => {
+          safeDelete(app.mosaicMat);
+          app.mosaicMat = mat;
+          app.mosaicIsColour = file === "Mosaiccol.jpg";
+        });
+      }
+
+      function loadExample() {
+        document.getElementById("mosaicChoice").value = EXAMPLE.mosaic;
+        hideSummary();
+        loadMosaic(EXAMPLE.mosaic)
+          .then(() => {
+            app.steps.forEach((s) => s.output.delete());
+            app.steps = [];
+            cropFromSelection(EXAMPLE.region);
+            const specs = EXAMPLE.steps.map((step) => {
+              const snap = { ...defaultSnapshots[step.module], ...step.set };
+              if (step.seed) snap.seed = { ...step.seed };
+              return { module: step.module, snap };
+            });
+            app.seed = { x: 5, y: 5 };
+            const error = rerunPipeline(specs);
+            refreshPipeline();
+            if (error) {
+              setStatus("The example could not run: " + error, true);
+              return;
+            }
+            setStatus(
+              "Example loaded: Taj Mahal extraction (Standard mosaic, row 3, column 2). Click Edit on any step to see its settings, or Finish to review the result.",
+            );
+          })
+          .catch((err) => {
+            console.error(err);
+            setStatus("Could not load the example.", true);
+          });
+      }
+
+      function resetAll() {
+        app.steps.forEach((s) => s.output.delete());
+        app.steps = [];
+        safeDelete(app.source);
+        app.source = null;
+        app.editing = null;
+        app.seed = null;
+        app.selection = null;
+        app.dragging = false;
+        selectionOverlay.style.display = "none";
+        clearPreview();
+        resetControls();
+        hideSummary();
+        refreshPipeline();
+        setStatus("Test bench reset. Select a region from the mosaic to start a new pipeline.");
+      }
+
+      function onOpenCvReady() {
+        setupMosaicSelection();
+        refreshPipeline();
+        loadMosaic(document.getElementById("mosaicChoice").value)
+          .then(() =>
+            setStatus("OpenCV is ready. Drag or touch-drag on the mosaic to select the starting image."),
+          )
+          .catch((err) => {
+            console.error(err);
+            setStatus("Could not load the mosaic image.", true);
+          });
+      }
+
+      document.getElementById("mosaicChoice").addEventListener("change", (event) => {
+        const label = event.target.selectedOptions[0].textContent;
+        loadMosaic(event.target.value)
+          .then(() => setStatus(label + " mosaic loaded. Drag over it to select an image."))
+          .catch((err) => {
+            console.error(err);
+            setStatus("Could not load the mosaic image.", true);
+          });
+      });
+
+      document.getElementById("button1").addEventListener("click", () => {
+        mosaic.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        setStatus("Drag or touch-drag a rectangle over the mosaic to select the starting image.");
+      });
+      document.getElementById("button2").addEventListener("click", previewStep);
+      document.getElementById("addStep").addEventListener("click", addOrUpdateStep);
+      document.getElementById("button4").addEventListener("click", resetAll);
+      document.getElementById("loadExample").addEventListener("click", loadExample);
+      document.getElementById("finishPipeline").addEventListener("click", showSummary);
+      document.getElementById("backToEditing").addEventListener("click", () => {
+        hideSummary();
+        setStatus("Back to editing. The pipeline is unchanged.");
+      });
+      document.getElementById("startNew").addEventListener("click", resetAll);
+      document.getElementById("undoStep").addEventListener("click", () => {
+        if (!app.steps.length) return;
+        app.steps.pop().output.delete();
+        app.editing = null;
+        clearPreview();
+        refreshPipeline();
+        setStatus("Last step removed.");
+      });
+      document.getElementById("clearPipeline").addEventListener("click", () => {
+        app.steps.forEach((s) => s.output.delete());
+        app.steps = [];
+        app.editing = null;
+        clearPreview();
+        refreshPipeline();
+        setStatus("All steps cleared. The original image is kept.");
+      });
+      document.getElementById("copySteps").addEventListener("click", () => {
+        const text = stepsAsText();
+        const done = () => setStatus("Pipeline steps copied to the clipboard.");
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(text).then(done, () => window.prompt("Copy the pipeline steps:", text));
+        } else {
+          window.prompt("Copy the pipeline steps:", text);
+        }
+      });
+
+      setupControls();
+
+      function waitForOpenCv(maxAttempts) {
+        let attempts = 0;
+        const timer = setInterval(() => {
+          attempts += 1;
+          if (window.cv && typeof window.cv.Mat !== "undefined") {
+            clearInterval(timer);
+            onOpenCvReady();
+            return;
+          }
+          if (attempts >= maxAttempts) {
+            clearInterval(timer);
+            setStatus("OpenCV did not initialize correctly.", true);
+          }
+        }, 250);
+      }
+
+      if (window.cv && typeof window.cv.Mat !== "undefined") {
+        onOpenCvReady();
+      } else {
+        waitForOpenCv(120);
+      }
+    </script>
+  </body>
+</html>

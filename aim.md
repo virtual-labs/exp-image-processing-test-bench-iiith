@@ -1,0 +1,1 @@
+The aim of this experiment is to study how a sequence of image processing modules can be combined to solve an image processing problem, and to understand how a modular, step-by-step approach can be used to develop and evaluate a solution.
